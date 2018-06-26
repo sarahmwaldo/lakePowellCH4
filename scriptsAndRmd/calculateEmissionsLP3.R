@@ -11,7 +11,7 @@
 
 
 # STEP 1: LINEAR AND NONLINEAR REGRESSION
-n <- length(lakePowellData$diffStartTime)
+n <- length(lakePowellData3$diffStartTime)
 temp <- rep(NA, n)
 
 # Dataframe to hold results
@@ -27,35 +27,36 @@ OUT <- data.frame(site = temp,
 
 # Remove data not recorded during deployment
 gga.model <-gga
-pdf("L:\\Priv\\Cin\\NRMRL\\ReservoirEbullitionStudy\\lakePowell2017\\curveFits.pdf")
+
+pdf(paste(myWD, "output/curveFits3.pdf", sep="/"))
 start.time <- Sys.time()
-for (i in 1:length(lakePowellData$diffStartTime)) {  # For each unique site
-  site.i <- lakePowellData$site[i]  # extract site.  regex allows for siteIDs of different lengths (i.e. S-01, SU-01)
+for (i in 1:length(lakePowellData3$diffStartTime)) {  # For each unique site
+  site.i <- lakePowellData3$site[i]  # extract site.  regex allows for siteIDs of different lengths (i.e. S-01, SU-01)
   #lake.i <- substr(site.lake.i, start = nchar(site.i) + 2, stop = nchar(site.lake.i)) # extract lake name
   OUT[i,"site"] <- site.i
   #OUT[i,"Lake_Name"] <- lake.i  
   # Need chamber volume from eqAreaData.
-  chmVol.L.i <- lakePowellData$chm_vol[i] 
+  chmVol.L.i <- lakePowellData3$chm_vol[i] 
   
 
 
   data.i.ch4 <- filter(gga.model,  # extract data
-                       RDateTime >= lakePowellData$diffStartTime[i], # based on diff start time
-                       RDateTime <= lakePowellData$diffEndTime[i])%>%  # based on diff end time
+                       RDateTime >= lakePowellData3$diffStartTime[i], # based on diff start time
+                       RDateTime <= lakePowellData3$diffEndTime[i])%>%  # based on diff end time
                 select(CH4._ppm, GasT_C, RDateTime)  # Pull out data of interest
 
   data.i.ch4$elapTime<-(data.i.ch4$RDateTime-data.i.ch4$RDateTime[1])
-  data.i.ch4$chmVol.L<-lakePowellData$chm_vol[i]
+  data.i.ch4$chmVol.L<-lakePowellData3$chm_vol[i]
   
   OUT[i, "ch4.diff.max"]<-max(data.i.ch4$CH4._ppm, na.rm=TRUE) #maximum CH4 mixing ratio measured during the chamber deployment time
   
   data.i.co2 <- filter(gga.model,  # extract data
-                       RDateTime >= lakePowellData$diffStartTime[i], # based on diff start time
-                       RDateTime <= lakePowellData$diffEndTime[i])%>% # based on diff end time
+                       RDateTime >= lakePowellData3$diffStartTime[i], # based on diff start time
+                       RDateTime <= lakePowellData3$diffEndTime[i])%>% # based on diff end time
     select(CO2._ppm, GasT_C, RDateTime)  # Pull out data of interest
  
    data.i.co2$elapTime<-(data.i.co2$RDateTime-data.i.co2$RDateTime[1])
-  data.i.co2$chmVol.L<-lakePowellData$chm_vol[i]
+  data.i.co2$chmVol.L<-lakePowellData3$chm_vol[i]
   
   # Are there data available to run the model?
   co2.indicator <- length(data.i.co2$CO2._ppm) == 0
@@ -223,8 +224,8 @@ start.time;Sys.time()
 #So let's debug by trying to do one thing at a time:
 
 # data.ch4.test <- filter(gga.model,  # extract data
-#                      RDateTime >= lakePowellData$diffStartTime[1], # based on diff start time
-#                      RDateTime <= lakePowellData$diffEndTime[1]) # based on diff end time
+#                      RDateTime >= lakePowellData3$diffStartTime[1], # based on diff start time
+#                      RDateTime <= lakePowellData3$diffEndTime[1]) # based on diff end time
 # 
 # data.ch4.test$elapTime<-(data.ch4.test$RDateTime-data.ch4.test$RDateTime[1])  %>%
 #   
@@ -287,10 +288,10 @@ ggplot(OUT, aes(ch4.drate.mg.h.best*24*12/16))+ #mgC m-2 d-1
 # STEP 3: MERGE DIFFUSION RATES WITH eqAreaData
 
 
-lakePowellData$ch4.drate.mg.h<-OUT$ch4.drate.mg.h.best
-lakePowellData$co2.drate.mg.h<-OUT$co2.drate.mg.h.best
+lakePowellData3$ch4.drate.mg.h<-OUT$ch4.drate.mg.h.best
+lakePowellData3$co2.drate.mg.h<-OUT$co2.drate.mg.h.best
 
-
+OUT3<-OUT
 
 
 # # CALCULATE EBULLITION RATE------------------
