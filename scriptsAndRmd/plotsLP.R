@@ -132,7 +132,7 @@ ch4_plot$points3d(x=long, y=lat, z=as.numeric(as.character(ch4.drate.mg.h)), # x
 
 
 #stacked dot chart of CH4 diffusive fluxes like the lake comparison chart, but for sites
-ggplot(lakePowellData,
+ggplot(lakePowellData3,
        aes(ch4.drate.mg.h, site)) +
   geom_point(alpha=0.3) +
   xlab(expression(CH[4]~emission~rate~(mg~ CH[4]~ m^{-2}~ hr^{-1}))) +
@@ -140,13 +140,15 @@ ggplot(lakePowellData,
         plot.title = element_text(hjust = 0.5))   #plot title justify center
 #same as above, but with negative values filtered and with a log scale
 #stacked dot chart of CH4 diffusive fluxes like the lake comparison chart, but for sites
-ggplot(filter(lakePowellData, ch4.drate.mg.h>0),
+ggplot(filter(lakePowellData3, ch4.drate.mg.h>0),
        aes(ch4.drate.mg.h*24, site)) +
   geom_point(alpha=0.3) +
   xlab(expression(CH[4]~emission~rate~(mg~ CH[4]~ m^{-2}~ d^{-1}))) +
   theme(axis.title.y = element_blank(), # Eliminate x-axis title
         plot.title = element_text(hjust = 0.5)) +  #plot title justify center
-  scale_x_log10()
+  scale_x_log10()+
+  geom_point(data=filter(lakePowellData10, ch4.drate.mg.h>0), 
+                aes(ch4.drate.mg.h*24, site, color="10"), alpha=0.6)
   
 ggsave('C:/R_Projects/lakePowell/ch4diffusion.tiff',  # export as .tif
        units="in",  # specify units for dimensions
@@ -198,7 +200,7 @@ write.table(lakePowellData,
 
 #facet plot of CH4 diffusive emissions by site and by 3-min timeperiod within 10-min deployment
 #for the 20 low-emitting sites (<5 mg CH4 m-2 d-1)
-ggplot(filter(lakePowellData, site != "Alcove",
+ggplot(filter(lakePowellData3, site != "Alcove",
               site != "Hite Canyon",
               site != "Camp 3",
               site != "Camp2",

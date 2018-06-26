@@ -7,10 +7,11 @@
 # library(scales)  # load from masterLibrary
 # source("ohio2016/scriptsAndRmd/masterLibrary.R")
 
+myWD<-"C:/R_Projects/lakePowellCH4"
 
 # READ DATA-----------------
 # List of .txt files containing data
-txtFiles <- list.files("L:/Priv/Cin/NRMRL/ReservoirEbullitionStudy/lakePowell2017/UGGA/", 
+txtFiles <- list.files(paste(myWD, "input/UGGA", sep="/"), 
                        pattern="*.txt$", recursive = TRUE) # $ matches end of string, excludes '...txt.zip' file
 
 # Directories contain _s, _l, and _b files that don't contain data of interest.
@@ -20,8 +21,8 @@ txtFiles <- txtFiles[!grepl(pattern = "_s|_l|_b", x = txtFiles)] # exclude files
 ggaList <- list()  # Empty list to hold results
 
 for (i in 1:length(txtFiles)) {  # loop to read and format each file
-  gga.i <- read.table(paste("L:/Priv/Cin/NRMRL/ReservoirEbullitionStudy/lakePowell2017/UGGA/", 
-                            txtFiles[i], sep=""),
+  gga.i <- read.table(paste(myWD, "input/UGGA", 
+                            txtFiles[i], sep="/"),
                       sep=",",  # comma separate
                       skip=1,  # Skip first line of file.  Header info
                       colClasses = c("character", rep("numeric", 21), rep("NULL", 71)),
@@ -54,7 +55,7 @@ for (i in 1:length(txtFiles)) {  # loop to read and format each file
 gga <- do.call("rbind", ggaList)  # Coerces list into dataframe.
 
 write.table(gga, 
-            file="C:/R_Projects/lakePowell/output/lgr_ugga.csv",
+            file="C:/R_Projects/lakePowellCH4/output/lgr_ugga.csv",
             sep=",",
             row.names=FALSE)
 
