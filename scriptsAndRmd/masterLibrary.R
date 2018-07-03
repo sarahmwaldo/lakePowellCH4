@@ -164,27 +164,27 @@ mass.rate <- function(X1, choice1){
 
 
 # ORDER Lake_Name FUNCTION-------------------------
-orderLake <- function(x, choice1) {
+orderSite <- function(x, choice1) {
   if(choice1 == "ch4.d") {
-    column <- "ch4.drate.mg.m2.h_Estimate"
+    column <- "ch4.drate.mg.h"
     orderList <- order(x[, column])
-    lakeLevels <- x[orderList, "Lake_Name"]
-    factor(x$Lake_Name, levels = lakeLevels)
+    siteLevels <- x[orderList, "site"]
+    factor(x$site, levels = siteLevels)
   } else if(choice1 == "ch4.e") {
-    column <- "ch4.erate.mg.h_Estimate"
+    column <- "ch4.erate"
     orderList <- order(x[, column])
-    lakeLevels <- x[orderList, "Lake_Name"]
-    factor(x$Lake_Name, levels = lakeLevels)
+    siteLevels <- x[orderList, "site"]
+    factor(x$site, levels = siteLevels)
   } else if(choice1 == "ch4.t") {
     column <- "ch4.trate.mg.h_Estimate"
     orderList <- order(x[, column])
     lakeLevels <- x[orderList, "Lake_Name"]
     factor(x$Lake_Name, levels = lakeLevels)
   } else if(choice1 == "co2.d") {
-    column <- "co2.drate.mg.m2.h_Estimate"
+    column <- "co2.drate.mg.h"
     orderList <- order(x[, column])
-    lakeLevels <- x[orderList, "Lake_Name"]
-    factor(x$Lake_Name, levels = lakeLevels)
+    siteLevels <- x[orderList, "site"]
+    factor(x$site, levels = siteLevels)
   } else if(choice1 == "co2.e") {
     column <- "co2.erate.mg.h_Estimate"
     orderList <- order(x[, column])

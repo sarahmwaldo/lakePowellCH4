@@ -15,7 +15,7 @@ n <- length(lakePowellData3$diffStartTime)
 temp <- rep(NA, n)
 
 # Dataframe to hold results
-OUT <- data.frame(site = temp,
+OUT <- data.frame(site = temp, rep = temp, per = temp,
                   ch4.diff.max=temp, #Sarah added on 6/14/17; making histogram of max ch4 levels measured by LGR
                   ch4.lm.slope = temp, ch4.lm.drate.mg.h = temp, ch4.lm.aic = temp, ch4.lm.r2 = temp, ch4.lm.pval = temp,
                   ch4.ex.aic = temp, ch4.ex.r2 = temp, ch4.ex.slope = temp, ch4.ex.drate.mg.h = temp, ch4.ex.k=temp, 
@@ -28,12 +28,16 @@ OUT <- data.frame(site = temp,
 # Remove data not recorded during deployment
 gga.model <-gga
 
-pdf(paste(myWD, "output/curveFits3.pdf", sep="/"))
+pdf(paste(myWD, "output/curveFits3.pdf", sep="/"), paper = "a4r")
 start.time <- Sys.time()
 for (i in 1:length(lakePowellData3$diffStartTime)) {  # For each unique site
   site.i <- lakePowellData3$site[i]  # extract site.  regex allows for siteIDs of different lengths (i.e. S-01, SU-01)
+  rep.i <- lakePowellData3$rep[i]
+  per.i <- lakePowellData3$timeperiod[i]
   #lake.i <- substr(site.lake.i, start = nchar(site.i) + 2, stop = nchar(site.lake.i)) # extract lake name
   OUT[i,"site"] <- site.i
+  OUT[i, "rep"] <-rep.i
+  OUT[i, "per"] <-per.i
   #OUT[i,"Lake_Name"] <- lake.i  
   # Need chamber volume from eqAreaData.
   chmVol.L.i <- lakePowellData3$chm_vol[i] 
@@ -163,6 +167,8 @@ for (i in 1:length(lakePowellData3$diffStartTime)) {  # For each unique site
     silent = TRUE)
   
   ch4.title <- paste(OUT[i, "site"], # plot title
+                     "rep", OUT[i, "rep"],
+                     OUT[i, "per"],
                      "ex.r2=",
                      round(OUT[i, "ch4.ex.r2"], 2),
                      "ex.AIC=",
@@ -193,6 +199,8 @@ for (i in 1:length(lakePowellData3$diffStartTime)) {  # For each unique site
     silent=TRUE)
   
   co2.title <- paste(OUT[i, "site"], # plot title
+                     "rep", OUT[i, "rep"],
+                     OUT[i, "per"],
                      "ex.r2=",
                      round(OUT[i, "co2.ex.r2"], 2),
                      "ex.AIC=",
@@ -214,6 +222,7 @@ for (i in 1:length(lakePowellData3$diffStartTime)) {  # For each unique site
   if (class(exp.co2.i) == "try-error") p.co2 else  # if exp model worked, add exp line
     p.co2 <- p.co2 + geom_line(data=co2.ex.pred, aes(as.numeric(elapTime), co2.pred), color = "red")
   print(p.co2)
+  grid.arrange(p.ch4, p.co2, ncol = 2)
 }  
 dev.off()
 start.time;Sys.time() 
@@ -255,9 +264,13 @@ OUT <- mutate(OUT,
                                       "linear", "exponential"),
               ch4.drate.mg.h.best = ifelse(ch4.best.model == "linear",
                                            ch4.lm.drate.mg.h, ch4.ex.drate.mg.h)) 
-# Inspect r2.
+# Inspect r2 and fractional error of slope
+#co2:
 plot(with(OUT,ifelse(co2.best.model == "linear", co2.lm.r2, co2.ex.r2)))  # CO2: some low ones to investigate
+plot(with(OUT, ifelse(co2.best.model == "linear", co2.lm.slope.err, co2.ex.slope.err)))
+#ch4:
 plot(with(OUT,ifelse(ch4.best.model == "linear", ch4.lm.r2, ch4.ex.r2)))  # CH4:  some low ones to investigate
+plot(with(OUT, ifelse(ch4.best.model == "linear", ch4.lm.slope.err, ch4.ex.slope.err)))
 
 # If r2 of best model < 0.8 for CO2, 0.9 for CH4, then set to NA
 OUT <- mutate(OUT, 
@@ -276,9 +289,13 @@ OUT <- mutate(OUT,
 # Inspect r2 after scrubbing r2<0.9
 plot(with(OUT[!is.na(OUT$co2.drate.mg.h.best),], 
           ifelse(co2.best.model == "linear", co2.lm.r2, co2.ex.r2)))  # CO2: all > 0.9
+plot(with(OUT[!is.na(OUT$co2.drate.mg.h.best),], 
+          ifelse(co2.best.model == "linear", co2.lm.slope.err, co2.ex.slope.err)))  # CO2: all > 0.9
 
 plot(with(OUT[!is.na(OUT$ch4.drate.mg.h.best),], 
           ifelse(ch4.best.model == "linear", ch4.lm.r2, ch4.ex.r2)))  # CH4: all > 0.9
+plot(with(OUT[!is.na(OUT$ch4.drate.mg.h.best),], 
+          ifelse(ch4.best.model == "linear", ch4.lm.slope.err, ch4.ex.slope.err))) 
 
 ggplot(OUT, aes(ch4.drate.mg.h.best*24*12/16))+ #mgC m-2 d-1
          geom_histogram(binwidth = 0.2)+
