@@ -27,6 +27,7 @@ OUT <- data.frame(site = temp,
 
 # Remove data not recorded during deployment
 gga.model <-gga
+
 pdf(paste(myWD, "output/curveFits10.pdf", sep="/"), paper = "a4r")
 start.time <- Sys.time()
 for (i in 1:length(lakePowellData10$diffStartTime)) {  # For each unique site
