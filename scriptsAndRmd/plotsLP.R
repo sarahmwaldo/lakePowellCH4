@@ -7,6 +7,8 @@
 
 lakePowellData10$dSite<-(orderSite(lakePowellData10, "ch4.d"))
 
+#1) all diffusive measurements: 44 observations, 29 sites
+#error bars are the se propagated from the slope uncertainty
 ggplot(lakePowellData10,
        aes(ch4.drate.mg.h*24, dSite)) +
   geom_point(alpha=0.3) +
@@ -16,33 +18,24 @@ ggplot(lakePowellData10,
   scale_x_log10()+
   geom_errorbarh(aes(x=(ch4.drate.mg.h*24),xmin=(ch4.drate.L*24), xmax=(ch4.drate.U*24)), 
                  size=0.5)+
-  theme_bw()+
-  geom_point(data=lakePowellData10, aes(ch4.trate.mg.h*24, site, color="green"))
+  theme_bw()
 
-#mean diffusive emissions by site:
- lakePowellBySite<-lakePowellData10 %>%
-    dplyr::group_by(site) %>%
-    dplyr::summarize(ch4.drate.sd = sd(ch4.drate.mg.h, na.rm=TRUE),
-                     ch4.drate.mg.h = (mean(ch4.drate.mg.h, na.rm=TRUE)),
-                     ch4.drate.n = n(),
-                      ch4.U = ch4.drate.mg.h + ch4.drate.sd/sqrt(ch4.drate.n),
-                      ch4.L = ch4.drate.mg.h - ch4.drate.sd/sqrt(ch4.drate.n)) 
-#for CO2: 
- lakePowellData10$dSite<-(orderSite(lakePowellData10, "co2.d"))
- 
- ggplot(lakePowellData10,
-        aes(co2.drate.mg.h*24, dSite)) +
-   geom_point(alpha=0.5, aes(color="red")) +
-   xlab(expression(CO[2]~diffusive~emission~rate~(mg~ CO[2]~ m^{-2}~ d^{-1}))) +
-   theme(axis.title.y = element_blank(), # Eliminate x-axis title
-         plot.title = element_text(hjust = 0.5)) +  #plot title justify center
-   #scale_x_log10()+
-   geom_errorbarh(aes(x=(co2.drate.mg.h*24),xmin=(co2.drate.L*24), xmax=(co2.drate.U*24), color="red"), 
-                  size=0.5)+
-   theme_bw()+
-   theme(legend.position = "none")
-   geom_point(data=lakePowellData10, aes(ch4.trate.mg.h*24, site, color="green"))
- 
+#2) same as 1) for CO2: 
+lakePowellData10$dSite<-(orderSite(lakePowellData10, "co2.d"))
+
+ggplot(lakePowellData10,
+       aes(co2.drate.mg.h*24, dSite)) +
+  geom_point(alpha=0.5, aes(color="red")) +
+  xlab(expression(CO[2]~diffusive~emission~rate~(mg~ CO[2]~ m^{-2}~ d^{-1}))) +
+  theme(axis.title.y = element_blank(), # Eliminate x-axis title
+        plot.title = element_text(hjust = 0.5)) +  #plot title justify center
+  #scale_x_log10()+
+  geom_errorbarh(aes(x=(co2.drate.mg.h*24),xmin=(co2.drate.L*24), xmax=(co2.drate.U*24), color="red"), 
+                 size=0.5)+
+  theme_bw()+
+  theme(legend.position = "none")
+geom_point(data=lakePowellData10, aes(ch4.trate.mg.h*24, site, color="green"))
+
  #mean diffusive emissions by site:
  lakePowellBySite<-lakePowellData10 %>%
    dplyr::group_by(site) %>%
@@ -61,6 +54,8 @@ lakePowellBySite<-data.frame(lakePowellBySite)
 lakePowellBySite$dSite<-orderSite(lakePowellBySite, "ch4.d")
 lakePowellBySite$dSiteCo2<-orderSite(lakePowellBySite, "co2.d")
 
+#3) mean CH4 diffusive emissions for each of the 29 sites
+#error bars are the se between replicates for sites with >1 chamber result
 ggplot(lakePowellBySite,
        aes(ch4.drate.mg.h*24, dSite)) +
   geom_point(alpha=0.3) +
@@ -71,7 +66,7 @@ ggplot(lakePowellBySite,
   geom_errorbarh(aes(x=(ch4.drate.mg.h*24),xmin=(ch4.L*24), xmax=(ch4.U*24)), 
                  size=0.5)+
   theme_bw()
-#CO2
+#4) same as 3) but for CO2
 ggplot(lakePowellBySite,
        aes(co2.drate.mg.h*24, dSiteCo2)) +
   geom_point(alpha=0.5, aes(color="red")) +
@@ -84,10 +79,12 @@ ggplot(lakePowellBySite,
   theme_bw()+
   theme(legend.position = "none")
 
-#ebullitive emissions
-lakePowellData10$eSite<-orderSite(lakePowellData10, "ch4.e")
-eb.plot<-ggplot(filter(lakePowellEb.m, variable == "CH4.funnel.flux" | variable == "ch4.erate"),
-                aes(value*24, site)) +
+
+lakePowellEb.m$ebSite<-orderSite(lakePowellEb.m, "ch4.eb")
+
+#CH4 ebullitive emissions
+ggplot(filter(lakePowellEb.m, variable == "CH4.funnel.eb" | variable == "CH4.chamber.eb"),
+                aes(value*24, ebSite)) +
   geom_point(alpha=0.5, aes(shape = variable), size=2) +
   #geom_point(lakePowellData10, aes(CH4.funnel.flux*24, eSite))+
   xlab(expression(CH[4]~ebullitive~emission~rate~(mg~ CH[4]~ m^{-2}~ d^{-1}))) +
@@ -96,7 +93,15 @@ eb.plot<-ggplot(filter(lakePowellEb.m, variable == "CH4.funnel.flux" | variable 
   scale_x_log10()+
   theme_bw()
 
-eb.plot+geom_point(data=lakePowellFunnel, aes(CH4.funnel.flux, Site)) 
+ggplot(filter(lakePowellEb.m, variable == "CO2.funnel.eb" | variable == "CO2.chamber.eb"),
+       aes(value*24, ebSite), color="red") +
+  geom_point(alpha=0.5, aes(shape = variable), size=2) +
+  #geom_point(lakePowellData10, aes(CH4.funnel.flux*24, eSite))+
+  xlab(expression(CO[2]~ebullitive~emission~rate~(mg~ CO[2]~ m^{-2}~ d^{-1}))) +
+  theme(axis.title.y = element_blank(), # Eliminate x-axis title
+        plot.title = element_text(hjust = 0.5)) +  #plot title justify center
+  scale_x_log10()+
+  theme_bw()
 ####################################################----
 ##### MAPS #########################################
 ####################################################
@@ -182,9 +187,9 @@ ggmap(powellSat) +
 powellSites84@data <- merge(powellSites84@data, # add emission to point shp
                             select(lakePowellBySite, ch4.drate.mg.h,co2.drate.mg.h, site))
 
-powellSites84@data$CO2.sign<-ifelse(powellSites84@data$co2.drate.mg.h<0,
-                                    "uptake",
-                                    "emission")
+powellSites84@data$CO2.sign<-ifelse(powellSites84@data$co2.drate.mg.h<0, #if the diffusive emission rate for CO2 is negative
+                                    "uptake",       #label that site "uptake"
+                                    "emission")     #otherwise label the site "emission"
 
 co2.signP<-ggmap(powellSat) +
   ylab("Latitude") +
