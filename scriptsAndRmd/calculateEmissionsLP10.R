@@ -8,6 +8,8 @@
 #         CONFIRM CHOICE BY INSPECTING RAW DATA
 # STEP 3: MERGE WITH eqAreaData
 
+#Bridget is testing GitHub
+
 lakePowellData10<-filter(lakePowellData10, site!="SJR Inlet End", #SJR inlet end was recorded for the lat/long, but isn't a separate observation
                              rep!=4) #Camp 3, rep 4 is the measurement taken in the morning after the chamber was left on the water all night. 
                                      #There is a negative methane regression, indicating uptake, but this is an artifact. This is the only rep=4 in the dataset. 
