@@ -1,4 +1,4 @@
-#Bridget is testing push/pull function
+#Bridget is testing push/pull functions
 # Load libraries and functions
 source("C:/R_Projects/lakePowellCH4/scriptsAndRmd/masterLibrary.R")
 
