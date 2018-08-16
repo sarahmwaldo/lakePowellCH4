@@ -9,7 +9,7 @@ gga <- filter(gga, !is.na(RDateTime))  # strip out missing RDateTime.  They comp
 
 
 #2. LOAD THE EXCEL FILE THAT HAS SITE NAME, LAT, LONG, DEPLOYMENT DATE, CHAMBER START TIME, AND CHAMBER VOLUME
-lakePowellData10<-read.csv(paste(myWD, "input/dataEntryQCV2.csv", sep="/"), #omitted two chamber deployments when the fan wasn't on
+lakePowellData10<-read.csv(paste(myWD, "input/dataEntryQCV2.csv", sep="/"), #"V2" is because I omitted two chamber deployments when the fan wasn't on
                          header=TRUE,
                          colClasses=c(rep("character",1), "numeric","numeric", "numeric", "character", "character", "integer"))
 #convert the deployment date, chmStTm columns to an RDateTime column:
@@ -20,11 +20,12 @@ lakePowellData10$RDateTime <- as.POSIXct(paste(lakePowellData10$deplyDt, lakePow
 #str(lakePowellData10)
 #tail(lakePowellData10)
 
+#set start and end time for diffusive emission calcs, first guess: what was entered on the data sheet
 lakePowellData10$startTime<-lakePowellData10$RDateTime 
 lakePowellData10$endTime<-lakePowellData10$RDateTime+(60*10)  #chamber deployments were nominally 10 minutes; breaking them into 3-min chunks
 
 
-#3. UPDATE DEPLOYMENT AND RETRIEVAL TIMES 
+#3. UPDATE DEPLOYMENT AND RETRIEVAL TIMES BASED ON VISUAL INSPECTION
 
 #diffusion:
 lakePowellData10$diffStartTime<-lakePowellData10$startTime
@@ -97,7 +98,7 @@ lakePowellData10$diffEndTime[45]<-as.POSIXct("2017-07-18 14:41:50", format = "%Y
 lakePowellData10$diffEndTime[46]<-as.POSIXct("2017-07-20 14:04:00", format = "%Y-%m-%d %H:%M:%S", tz="UTC")
 
 
-###total (aka to determine ebullition) at the following sites:
+###total (aka to determine ebullition) at the following sites where ebullition was observed:
 #Camp2, Alcove, SJR Inlet, Colorado Inlet,  
 #Sheep Canyon, Escalante Inflow, and Garces Island
 lakePowellData10$totStartTime<-lakePowellData10$diffStartTime

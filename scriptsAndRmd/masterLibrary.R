@@ -175,6 +175,11 @@ orderSite <- function(x, choice1) {
     orderList <- order(x[, column])
     siteLevels <- x[orderList, "site"]
     factor(x$site, levels = siteLevels)
+  } else if(choice1 == "ch4.eb") { #for melted ebullition dataframe
+    column <- "value"
+    orderList <- order(x[, column])
+    siteLevels <- x[orderList, "site"]
+    factor(x$site, levels = siteLevels)
   } else if(choice1 == "ch4.t") {
     column <- "ch4.trate.mg.h_Estimate"
     orderList <- order(x[, column])
