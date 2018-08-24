@@ -22,7 +22,10 @@ head(diffusive)
 
 #join diffusive fluxes with surface seabird data
 surface_seabird_diffusive<-right_join(seabirdsurface,diffusive,by="Station.ID")
-head(surface_seabird_diffusive)
+# head(surface_seabird_diffusive)
+# str(surface_seabird_diffusive)
+# surface_seabird_diffusive$ch4.drate.mg.h
+# surface_seabird_diffusive$ch4.drate.mg.h.<-as.numeric(as.character(surface_seabird_diffusive$ch4.drate.mg.h))
 
 #join diffusive fluxes with chlorophyll maximum data
 chlamax_seabird_diffusive<-right_join(chlaseabird,diffusive,by="Station.ID")
@@ -52,10 +55,13 @@ co2Chl<-surface_seabird_diffusive %>%
   xlab(expression(paste("Chlorophyll a")))
 co2Chl
 
-ch4dist<-surface_seabird_diffusive %>%
+#when joined, ch4.drate.mg.h became a factor. convert to numeric:
+surface_seabird_diffusive$ch4.drate.mg.h<-as.numeric(as.character(surface_seabird_diffusive$ch4.drate.mg.h))
+
+ch4dist<-filter(surface_seabird_diffusive, River_arm != "") %>%
   mutate(ch4=ch4.drate.mg.h*24)%>%
   ggplot(aes(x=Distance,y=ch4))+
-  facet_wrap(~River_arm)+
+  facet_grid(.~River_arm)+
   geom_point()+
   theme_bw()+
   theme(panel.grid.major=element_blank(),panel.grid.minor=element_blank(),axis.line=element_line(colour="black"),
