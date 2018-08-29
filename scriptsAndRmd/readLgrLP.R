@@ -7,7 +7,7 @@
 # library(scales)  # load from masterLibrary
 # source("ohio2016/scriptsAndRmd/masterLibrary.R")
 
-myWD<-"C:/R_Projects/lakePowellCH4" #set to wherever your scripts and files are saved
+
 
 # READ DATA-----------------
 # List of .txt files containing data

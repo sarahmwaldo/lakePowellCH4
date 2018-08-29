@@ -10,11 +10,17 @@ seabird<-read.csv(paste(myWD, "input/tblProfiles_July2017_Query.csv", sep="/"))
 seabirdsurface<-seabird %>%
   filter(Depth==1)
 
-seabird
-
 chlaseabird<-seabird %>%
   group_by(Date,Station.ID) %>%
   summarise(Chl=max(Chl))
+
+domin_seabird<-seabird %>%
+  group_by(Date,Station.ID) %>%
+  summarise(DO=min(DO))
+
+depthmax_seabird <- seabird %>%
+  group_by(Date,Station.ID) %>%
+  summarise(Depth=max(Depth))
 
 #call the diffusive flux data that Sarah put toether
 diffusive<-read.csv(paste(myWD, "input/powellDiffusiveFluxes.csv", sep="/")) 
@@ -31,6 +37,12 @@ surface_seabird_diffusive<-right_join(seabirdsurface,diffusive,by="Station.ID")
 chlamax_seabird_diffusive<-right_join(chlaseabird,diffusive,by="Station.ID")
 head(chlamax_seabird_diffusive)
 
+domin_seabird_diffusive<-right_join(diffusive,domin_seabird,by="Station.ID")
+head(domin_seabird_diffusive)
+
+depthmax_seabird_diffusive<-right_join(diffusive,depthmax_seabird,by="Station.ID")
+head(depthmax_seabird_diffusive)
+
 ## look at potential predictors of GHG flux
 
 co2ph<-surface_seabird_diffusive %>%
@@ -43,6 +55,9 @@ co2ph<-surface_seabird_diffusive %>%
   ylab(expression(paste("Diffusive CO2 Emission mg m-2 d-1")))+
   xlab(expression(paste("pH")))
 co2ph
+
+aa<-lm(surface_seabird_diffusive$co2.drate.mg.h~surface_seabird_diffusive$pH)
+summary(aa)
 
 co2Chl<-surface_seabird_diffusive %>%
   mutate(co2=co2.drate.mg.h*24)%>%
@@ -116,3 +131,57 @@ ch4temp<-surface_seabird_diffusive %>%
   scale_y_log10()+
   scale_x_log10()
 ch4temp
+
+c<-lm(as.numeric(surface_seabird_diffusive$ch4.drate.mg.h)~surface_seabird_diffusive$T)
+summary(c)
+
+d<-lm(as.numeric(surface_seabird_diffusive$ch4.drate.mg.h)~surface_seabird_diffusive$Cond)
+summary(d)
+
+ch4DO<-domin_seabird_diffusive %>%
+  mutate(ch4=as.numeric(ch4.drate.mg.h)*24)%>%
+  ggplot(aes(x=DO,y=ch4))+
+  geom_point()+
+  geom_text(aes(label=Station.ID,hjust=0.2,vjust=0.1))+
+  theme_bw()+
+  theme(panel.grid.major=element_blank(),panel.grid.minor=element_blank(),axis.line=element_line(colour="black"),
+        plot.margin= unit(c(0,0,0,1.5),"cm"))+
+  ylab(expression(paste("Diffusive CH4 Emission mg m-2 d-1")))+
+  xlab(expression(paste("Minimum Water Column DO")))
+  #scale_y_log10()+
+  #scale_x_log10()
+ch4DO
+
+e<-lm(as.numeric(domin_seabird_diffusive$ch4.drate.mg.h)~domin_seabird_diffusive$DO)
+summary(e)
+
+ch4depth<-depthmax_seabird_diffusive %>%
+  mutate(ch4=as.numeric(ch4.drate.mg.h)*24)%>%
+  ggplot(aes(x=Depth,y=ch4))+
+  geom_point()+
+  geom_text(aes(label=Station.ID,hjust=0.2,vjust=0.1))+
+  theme_bw()+
+  theme(panel.grid.major=element_blank(),panel.grid.minor=element_blank(),axis.line=element_line(colour="black"),
+        plot.margin= unit(c(0,0,0,1.5),"cm"))+
+  ylab(expression(paste("Diffusive CH4 Emission mg m-2 d-1")))+
+  xlab(expression(paste("Maximum Depth")))
+#scale_y_log10()+
+#scale_x_log10()
+ch4depth
+
+f<-lm(as.numeric(depthmax_seabird_diffusive$ch4.drate.mg.h)~depthmax_seabird_diffusive$Depth)
+summary(f)
+
+co2depth<-depthmax_seabird_diffusive %>%
+  mutate(co2=co2.drate.mg.h*24)%>%
+  ggplot(aes(x=Depth,y=co2))+
+  geom_point()+
+  geom_text(aes(label=Station.ID,hjust=0.2,vjust=0.1))+
+  theme_bw()+
+  theme(panel.grid.major=element_blank(),panel.grid.minor=element_blank(),axis.line=element_line(colour="black"),
+        plot.margin= unit(c(0,0,0,1.5),"cm"))+
+  ylab(expression(paste("Diffusive Co2 Emission mg m-2 d-1")))+
+  xlab(expression(paste("Maximum Depth")))
+#scale_y_log10()+
+#scale_x_log10()
+co2depth

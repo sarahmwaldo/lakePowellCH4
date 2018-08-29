@@ -1,5 +1,9 @@
 #Sarah is doing more Git testing
 #Bridget is testing push/pull functions
+
+#Set working directory
+myWD<-"C:/R_Projects/lakePowellCH4" #set to wherever your scripts and files are saved
+
 # Load libraries and functions
 source("C:/R_Projects/lakePowellCH4/scriptsAndRmd/masterLibrary.R")
 
