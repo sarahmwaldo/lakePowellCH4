@@ -469,6 +469,9 @@ lakePowellDataSubset<-select(lakePowellData10, Station.ID, site, rep, lat, long,
                              ch4.drate.mg.h, co2.drate.mg.h, ch4.trate.mg.h, co2.trate.mg.h, 
                              ch4.slope.err, co2.slope.err, ch4.drate.U, ch4.drate.L, co2.drate.U, co2.drate.L,
                              methEbullition, methEbMethod, co2Ebullition, co2ebMethod)
+
+#Now make a vector that just has the depth for each site added into the lakePowellData1
+
 write.table(lakePowellDataSubset, 
             file=paste(myWD, "output/lakePowellFluxes.csv", sep="/"),
             sep=",",

@@ -6,6 +6,7 @@
 
 #call seabird data exported from access database and sort it-- I think Nick has yet to process the inflow stations?
 seabird<-read.csv(paste(myWD, "input/tblProfiles_July2017_Query.csv", sep="/"))
+depths<-read.csv(paste(myWD,"input/SiteDepths.csv", sep="/"))
 
 seabirdsurface<-seabird %>%
   filter(Depth==1)
@@ -40,7 +41,7 @@ head(chlamax_seabird_diffusive)
 domin_seabird_diffusive<-inner_join(diffusive,domin_seabird,by="Station.ID")
 head(domin_seabird_diffusive)
 
-depthmax_seabird_diffusive<-inner_join(diffusive,depthmax_seabird,by="Station.ID")
+depthmax_seabird_diffusive<-inner_join(diffusive,depths,by="Station.ID")
 head(depthmax_seabird_diffusive)
 
 ## look at potential predictors of GHG flux
@@ -157,6 +158,8 @@ summary(e)
 
 ch4depth<-depthmax_seabird_diffusive %>%
   mutate(ch4=as.numeric(ch4.drate.mg.h)*24)%>%
+  group_by(Station.ID)%>%
+  summarise(ch4=mean(ch4),Depth=mean(Depth))%>%
   ggplot(aes(x=Depth,y=ch4))+
   geom_point()+
   geom_text(aes(label=Station.ID,hjust=0.2,vjust=0.1))+
