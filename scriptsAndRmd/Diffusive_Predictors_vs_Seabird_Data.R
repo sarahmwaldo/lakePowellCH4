@@ -27,20 +27,20 @@ diffusive<-read.csv(paste(myWD, "input/powellDiffusiveFluxes.csv", sep="/"))
 head(diffusive)
 
 #join diffusive fluxes with surface seabird data
-surface_seabird_diffusive<-right_join(seabirdsurface,diffusive,by="Station.ID")
+surface_seabird_diffusive<-inner_join(seabirdsurface,lakePowellData10,by="Station.ID")
 # head(surface_seabird_diffusive)
 # str(surface_seabird_diffusive)
 # surface_seabird_diffusive$ch4.drate.mg.h
 # surface_seabird_diffusive$ch4.drate.mg.h.<-as.numeric(as.character(surface_seabird_diffusive$ch4.drate.mg.h))
 
 #join diffusive fluxes with chlorophyll maximum data
-chlamax_seabird_diffusive<-right_join(chlaseabird,diffusive,by="Station.ID")
+chlamax_seabird_diffusive<-inner_join(chlaseabird,diffusive,by="Station.ID")
 head(chlamax_seabird_diffusive)
 
-domin_seabird_diffusive<-right_join(diffusive,domin_seabird,by="Station.ID")
+domin_seabird_diffusive<-inner_join(diffusive,domin_seabird,by="Station.ID")
 head(domin_seabird_diffusive)
 
-depthmax_seabird_diffusive<-right_join(diffusive,depthmax_seabird,by="Station.ID")
+depthmax_seabird_diffusive<-inner_join(diffusive,depthmax_seabird,by="Station.ID")
 head(depthmax_seabird_diffusive)
 
 ## look at potential predictors of GHG flux

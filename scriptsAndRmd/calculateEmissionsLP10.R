@@ -396,6 +396,12 @@ lakePowellData10$site<-ifelse(lakePowellData10$site == "navajo", "Navajo", lakeP
 lakePowellData10$site<-ifelse(lakePowellData10$site == "wahweap", "Wahweap", lakePowellData10$site)
 lakePowellData10$site<-ifelse(lakePowellData10$site == "crossing of the fathers", "Crossing of the Fathers", lakePowellData10$site)
 
+lakePowellData10$Station.ID<-c("LPCR1","LPCR1","LPCR0024","LPCR0024","LPCR0155","LPCR0453","LPCR0905","LPCR1001","LPSJR070","LPSJR193",
+                               "LPCR2","LPCR2","LPCR2","LPSJR431","LPSJR530","LPSJR530","LPSJR730","LPCR3","LPCR3","LPCR3","LPCR3",
+                               "LPCR3","LPCR3","LPCRINF","LPCRINF","LPCRINF2","LPCRsheep","LPCR2387","LPCR2255","LPCR2085","LPCR1933",
+                               "LPCR1799","LPCR1679","LPCR1587","LPCR4","LPCR4","LPESCINF","LPESC273","LPESC119","LPESC030","LPCR1169",
+                               "LPCR0024","LPCR0453","LPCRsheep")
+
 ###total (aka to determine ebullition) at the following sites:
 #Camp2, Alcove, SJR Inlet, Colorado Inlet,  
 #Sheep Canyon, Escalante Inflow, and Garces Island
@@ -443,6 +449,8 @@ lakePowellEb<-select(lakePowellData10, site, CH4.funnel.eb,
 lakePowellEb.m <- reshape2::melt(lakePowellEb, id.vars =  "site") %>% # melt, converts exetainer code to factor
   filter(!is.na(value))  # remove NAs
 
-
+#it doesn't look like any fluxes are popping up in the column "CH4.chamber.eb"
+lakePowellData10<-lakePowellData10 %>%
+  mutate(MethEbullition=ifelse(CH4.funnel.flux>0,CH4.funnel.flux,0))
 
 
