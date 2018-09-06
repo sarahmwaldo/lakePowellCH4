@@ -91,8 +91,8 @@ for (i in 1:length(lakePowellData10$diffStartTime)) {  # For each unique site
   
   # Data needed for emission rate calcs.  Same #'s for CO2 and CH4.  Arbitrarily pulled from CO2.  
   temp.i <- if (co2.indicator) mean(data.i.ch4$GasT_C, na.rm = TRUE) else (mean(data.i.co2$GasT_C, na.rm = TRUE))  # GGA measured temp
-  volume.i <- if (co2.indicator) unique(data.i.ch4[!is.na(data.i.ch4$chmVol), "chmVol"]) else
-    unique(data.i.co2[!is.na(data.i.co2$chmVol), "chmVol"])# Dome "volume" offset -- in fact a height
+  volume.i <- if (co2.indicator) unique(data.i.ch4[!is.na(data.i.ch4$chmVol.L), "chmVol.L"]) else
+    unique(data.i.co2[!is.na(data.i.co2$chmVol.L), "chmVol.L"])# Dome "volume" offset -- in fact a height
   #needed for total emission rate calc
   d.ch4.i<- (-1*diff(data.i.ch4.t$CH4._ppm[end(data.i.ch4.t$CH4._ppm)])) #last CH4 value - first CH4 value
   d.co2.i<- (-1*diff(data.i.co2.t$CO2._ppm[end(data.i.co2.t$CO2._ppm)])) #last CO2 value - first CO2 value
@@ -443,14 +443,35 @@ lakePowellData10<-mutate(lakePowellData10,
 
 #want to melt/cast this so I have one column of ebullitive emissions, one column
 #assigning whether it was a chamber or funnel measurement
-lakePowellEb<-select(lakePowellData10, site, CH4.funnel.eb, 
-                     CH4.chamber.eb, CO2.funnel.eb, CO2.chamber.eb)
+lakePowellMethEb<-select(lakePowellData10, RDateTime, CH4.funnel.eb, 
+                     CH4.chamber.eb)
+lakePowellCO2Eb<-select(lakePowellData10, RDateTime, CO2.funnel.eb, CO2.chamber.eb)
 
-lakePowellEb.m <- reshape2::melt(lakePowellEb, id.vars =  "site") %>% # melt, converts exetainer code to factor
+lakePowellMethEb.m <- reshape2::melt(lakePowellMethEb, id.vars =  "RDateTime") %>% # melt, converts measurement code to factor
   filter(!is.na(value))  # remove NAs
+lakePowellCO2Eb.m <- reshape2::melt(lakePowellCO2Eb, id.vars =  "RDateTime") %>% # melt, converts measurement code to factor
+  filter(!is.na(value))  # remove NAs
+#prep for meerging with lakePowellData10
+lakePowellMethEb.m<-mutate(lakePowellMethEb.m,
+                       methEbMethod = variable,
+                       methEbullition = value)
+lakePowellCO2Eb.m<-mutate(lakePowellCO2Eb.m,
+                           co2ebMethod = variable,
+                           co2Ebullition = value)
+lakePowellData10<-left_join(lakePowellData10, lakePowellMethEb.m, by="RDateTime")
+lakePowellData10<-left_join(lakePowellData10, lakePowellCO2Eb.m, by="RDateTime")
 
 #it doesn't look like any fluxes are popping up in the column "CH4.chamber.eb"
-lakePowellData10<-lakePowellData10 %>%
-  mutate(MethEbullition=ifelse(CH4.funnel.flux>0,CH4.funnel.flux,0))
+# lakePowellData10<-lakePowellData10 %>%
+#   mutate(MethEbullition=ifelse(CH4.funnel.flux>0,CH4.funnel.flux,0))
+
+lakePowellDataSubset<-select(lakePowellData10, Station.ID, site, rep, lat, long, RDateTime, 
+                             ch4.drate.mg.h, co2.drate.mg.h, ch4.trate.mg.h, co2.trate.mg.h, 
+                             ch4.slope.err, co2.slope.err, ch4.drate.U, ch4.drate.L, co2.drate.U, co2.drate.L,
+                             methEbullition, methEbMethod, co2Ebullition, co2ebMethod)
+write.csv()
+
+
+
 
 
