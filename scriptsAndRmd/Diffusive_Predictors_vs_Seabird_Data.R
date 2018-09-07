@@ -24,7 +24,9 @@ depthmax_seabird <- seabird %>%
   summarise(Depth=max(Depth))
 
 #call the diffusive flux data that Sarah put toether
-diffusive<-read.csv(paste(myWD, "input/powellDiffusiveFluxes.csv", sep="/")) 
+#just changed this to pull in the output file, but if you want to compare with what we were looking at previously
+#you can change it back to the diffusive fluxes in the input folder
+diffusive<-read.csv(paste(myWD, "output/lakePowellFluxes.csv", sep="/")) 
 head(diffusive)
 
 #join diffusive fluxes with surface seabird data
