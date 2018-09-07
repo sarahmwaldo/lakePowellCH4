@@ -16,6 +16,9 @@ source("C:/R_Projects/lakePowellCH4/scriptsAndRmd/readLgrLP.R") # Reads in raw L
 # Merge chamber time with excel spreadsheet, 10min, 
 source("C:/R_Projects/lakePowellCH4/scriptsAndRmd/plotCleanLgrLP10min.R") # keeps nominal chamber deployment dt as 10-min
 source("C:/R_Projects/lakePowellCH4/scriptsAndRmd/calculateEmissionsLP10.R") # Merges with eqAreaData for 10-min chamber dt
+  #saves a .csv file that has diffusive, ebullitive, and total emission rates
+  #for CO2 and methane in units of mg/m2/hr
+
 
 #then make plots with "plotsLP.R"
 #can replicate the back of the envelope ("BOE") whole lake emission estimate using 

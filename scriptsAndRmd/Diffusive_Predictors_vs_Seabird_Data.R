@@ -76,10 +76,11 @@ co2Chl
 #when joined, ch4.drate.mg.h became a factor. convert to numeric:
 surface_seabird_diffusive$ch4.drate.mg.h<-as.numeric(as.character(surface_seabird_diffusive$ch4.drate.mg.h))
 
-ch4dist<-filter(surface_seabird_diffusive, River_arm != "") %>%
+#ch4dist<-filter(surface_seabird_diffusive, River_arm != "") %>%
+ch4dist<-surface_seabird_diffusive %>% 
   mutate(ch4=ch4.drate.mg.h*24)%>%
   ggplot(aes(x=Distance,y=ch4))+
-  facet_grid(.~River_arm)+
+  #facet_grid(.~River_arm)+
   geom_point()+
   theme_bw()+
   theme(panel.grid.major=element_blank(),panel.grid.minor=element_blank(),axis.line=element_line(colour="black"),

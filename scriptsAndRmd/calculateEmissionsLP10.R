@@ -332,6 +332,17 @@ OUT <- mutate(OUT,
                                       "exponential","linear"),
               ch4.drate.mg.h.best = ifelse(ch4.best.model == "linear",
                                            ch4.lm.drate.mg.h, ch4.ex.drate.mg.h)) 
+#9/7/18: this may be making a bigger difference in the final emission values than I realized. look at the data with using AIC
+OUT <- mutate(OUT, 
+              co2.best.model = ifelse(co2.lm.aic > co2.ex.aic | is.na(co2.ex.aic), 
+                                      "exponential", "linear"),
+              co2.drate.mg.h.best = ifelse(co2.best.model == "linear",
+                                           co2.lm.drate.mg.h, co2.ex.drate.mg.h),
+              ch4.best.model = ifelse(ch4.lm.aic > ch4.ex.aic | is.na(ch4.ex.aic), 
+                                      "exponential","linear"),
+              ch4.drate.mg.h.best = ifelse(ch4.best.model == "linear",
+                                           ch4.lm.drate.mg.h, ch4.ex.drate.mg.h)) 
+
 # Inspect r2 and fractional error of slope
   #CO2 R2
 plot(with(OUT,ifelse(co2.best.model == "linear", co2.lm.r2, co2.ex.r2)))  # CO2: some low ones to investigate
@@ -411,11 +422,11 @@ lakePowellData10<-mutate(lakePowellData10,
                          ch4.erate = ifelse(site =="Camp 2" | site== "Alcove" |site == "SJR Inlet" | site== "Colorado Inlet" | 
                                               site =="Sheep Canyon" |site == "Escalante Inflow"|site== "Garces Island", 
                                             (ch4.trate.mg.h - ch4.drate.mg.h),
-                                            NA),
+                                            0),
                          co2.erate = ifelse(site =="Camp 2" | site== "Alcove" |site == "SJR Inlet" | site== "Colorado Inlet" | 
                                               site =="Sheep Canyon" |site == "Escalante Inflow"|site== "Garces Island", 
                                             (co2.trate.mg.h - co2.drate.mg.h),
-                                            NA),
+                                            0),
                          ch4.drate.U=ch4.drate.mg.h*(1+ch4.slope.err),
                          ch4.drate.L=ch4.drate.mg.h*(1-ch4.slope.err),
                          co2.drate.U=co2.drate.mg.h*(1+co2.slope.err),
@@ -428,11 +439,19 @@ OUT10<-OUT
 #                              Sheep Canyon, Escalante Inflow, and Garces Island
 
 lakePowellFunnel<-read_xlsx(paste(myWD, "input/ebFluxCalcsPowell.xlsx", sep="/"))
-lakePowellFunnel<-(select(lakePowellFunnel, Site, CH4.funnel.flux, CO2.funnel.flux, N2O.funnel.flux))%>%
-  filter(!is.na(lakePowellFunnel$CH4.funnel.flux))
 lakePowellFunnel$site<-lakePowellFunnel$Site
+lakePowellFunnel<-(select(lakePowellFunnel, site, CH4.funnel.flux, CO2.funnel.flux, N2O.funnel.flux))%>%
+  filter(!is.na(lakePowellFunnel$CH4.funnel.flux))
+lakePowellFunnel<-select(lakePowellFunnel, -site)
 
-lakePowellData10<-left_join(lakePowellData10, lakePowellFunnel, by="site")
+#add station ID's to this data frame, assigning LPCR5 and LPCR6 to WAH01 and WAH02, respectively
+lakePowellFunnel$Station.ID<-c("LPCR4", "LPCR3", "LPCR2", 
+                               "LPCR5", "LPCR6", "LPCR1")
+
+#merge with the main data frame 
+lakePowellData10<-merge(lakePowellData10, lakePowellFunnel, 
+                            by.x="Station.ID", by.y="Station.ID", all=TRUE)
+#unique(lakePowellData10test$site)
 
 #rename so naming makes more sense in the melted dataframe
 lakePowellData10<-mutate(lakePowellData10,
@@ -440,35 +459,67 @@ lakePowellData10<-mutate(lakePowellData10,
                          CH4.funnel.eb=CH4.funnel.flux,
                          CO2.chamber.eb=co2.erate,
                          CO2.funnel.eb=CO2.funnel.flux)
-
-#want to melt/cast this so I have one column of ebullitive emissions, one column
-#assigning whether it was a chamber or funnel measurement
-lakePowellMethEb<-select(lakePowellData10, RDateTime, CH4.funnel.eb, 
-                     CH4.chamber.eb)
-lakePowellCO2Eb<-select(lakePowellData10, RDateTime, CO2.funnel.eb, CO2.chamber.eb)
-
-lakePowellMethEb.m <- reshape2::melt(lakePowellMethEb, id.vars =  "RDateTime") %>% # melt, converts measurement code to factor
-  filter(!is.na(value))  # remove NAs
-lakePowellCO2Eb.m <- reshape2::melt(lakePowellCO2Eb, id.vars =  "RDateTime") %>% # melt, converts measurement code to factor
-  filter(!is.na(value))  # remove NAs
-#prep for meerging with lakePowellData10
-lakePowellMethEb.m<-mutate(lakePowellMethEb.m,
-                       methEbMethod = variable,
-                       methEbullition = value)
-lakePowellCO2Eb.m<-mutate(lakePowellCO2Eb.m,
-                           co2ebMethod = variable,
-                           co2Ebullition = value)
-lakePowellData10<-left_join(lakePowellData10, lakePowellMethEb.m, by="RDateTime")
-lakePowellData10<-left_join(lakePowellData10, lakePowellCO2Eb.m, by="RDateTime")
+#####9/7/2018 -- we don't want to do this SW----
+# #want to melt/cast this so I have one column of ebullitive emissions, one column
+# #assigning whether it was a chamber or funnel measurement
+# lakePowellMethEb<-select(lakePowellData10, RDateTime, CH4.funnel.eb, 
+#                      CH4.chamber.eb)
+# lakePowellCO2Eb<-select(lakePowellData10, RDateTime, CO2.funnel.eb, CO2.chamber.eb)
+# 
+# lakePowellMethEb.m <- reshape2::melt(lakePowellMethEb, id.vars =  "RDateTime") %>% # melt, converts measurement code to factor
+#   filter(!is.na(value))  # remove NAs
+# lakePowellCO2Eb.m <- reshape2::melt(lakePowellCO2Eb, id.vars =  "RDateTime") %>% # melt, converts measurement code to factor
+#   filter(!is.na(value))  # remove NAs
+# #prep for meerging with lakePowellData10
+# lakePowellMethEb.m<-mutate(lakePowellMethEb.m,
+#                        methEbMethod = variable,
+#                        methEbullition = value)
+# lakePowellCO2Eb.m<-mutate(lakePowellCO2Eb.m,
+#                            co2ebMethod = variable,
+#                            co2Ebullition = value)
+# lakePowellData10t3<-left_join(lakePowellData10, lakePowellMethEb.m, by="RDateTime")
+# lakePowellData10<-left_join(lakePowellData10, lakePowellCO2Eb.m, by="RDateTime")
 
 #it doesn't look like any fluxes are popping up in the column "CH4.chamber.eb"
 # lakePowellData10<-lakePowellData10 %>%
 #   mutate(MethEbullition=ifelse(CH4.funnel.flux>0,CH4.funnel.flux,0))
+#####------
 
 lakePowellDataSubset<-select(lakePowellData10, Station.ID, site, rep, lat, long, RDateTime, 
                              ch4.drate.mg.h, co2.drate.mg.h, ch4.trate.mg.h, co2.trate.mg.h, 
                              ch4.slope.err, co2.slope.err, ch4.drate.U, ch4.drate.L, co2.drate.U, co2.drate.L,
-                             methEbullition, methEbMethod, co2Ebullition, co2ebMethod)
+                             CH4.chamber.eb, CH4.funnel.eb, CO2.chamber.eb, CO2.funnel.eb)
+#Now make vectors of CH4 and CO2 ebullition best number for each site
+#then we can calculate total emissions for each site
+
+  #the only site with BOTH chamber and funnel eb msmts is Camp 2, 
+  #otherwise, we can pick from which msmt is available:
+lakePowellDataSubset$CH4.eb.best<-ifelse(
+  is.na(lakePowellDataSubset$CH4.funnel.eb),
+  lakePowellDataSubset$CH4.chamber.eb, #value if funnel eb is NA
+  lakePowellDataSubset$CH4.funnel.eb) #value if it is a number
+                                                       
+lakePowellDataSubset$CO2.eb.best<-ifelse(
+  is.na(lakePowellDataSubset$CO2.funnel.eb),
+  lakePowellDataSubset$CO2.chamber.eb, #value if funnel eb is NA
+  lakePowellDataSubset$CO2.funnel.eb) #value if it is a number         
+
+#Do we trust the funnel numbers more than the chamber numbers?
+#If not, we should average the measurements for Camp 2
+camp2co2<-mean(1.071453, 0.018879, 13.13)
+camp2ch4<-mean(0.1698103, 0.141869, 0.0322)
+
+lakePowellDataSubset<-mutate(lakePowellDataSubset,
+                             CH4.eb.best = replace(CH4.eb.best, 
+                                                   site == "Camp 2",
+                                                   camp2ch4),
+                             CO2.eb.best = replace(CO2.eb.best, 
+                                                   site == "Camp 2",
+                                                   camp2co2))
+###now we can calculate total emissions:
+lakePowellDataSubset<-mutate(lakePowellDataSubset,
+                             CH4.trate.best = ch4.drate.mg.h+CH4.eb.best,
+                             CO2.trate.best = co2.drate.mg.h+CO2.eb.best)
 
 #Now make a vector that just has the depth for each site added into the lakePowellData1
 
