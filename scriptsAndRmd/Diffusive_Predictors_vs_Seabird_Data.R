@@ -26,7 +26,7 @@ depthmax_seabird <- seabird %>%
 #call the diffusive flux data that Sarah put toether
 #just changed this to pull in the output file, but if you want to compare with what we were looking at previously
 #you can change it back to the diffusive fluxes in the input folder
-diffusive<-read.csv(paste(myWD, "output/lakePowellFluxes.csv", sep="/")) 
+diffusive<-read.csv(paste(myWD, "input/powellDiffusiveFluxes.csv", sep="/")) 
 head(diffusive)
 
 #join diffusive fluxes with surface seabird data
@@ -160,7 +160,7 @@ e<-lm(as.numeric(domin_seabird_diffusive$ch4.drate.mg.h)~domin_seabird_diffusive
 summary(e)
 
 ch4depth<-depthmax_seabird_diffusive %>%
-  mutate(ch4=as.numeric(ch4.drate.mg.h)*24)%>%
+  mutate(ch4=as.numeric(as.character((ch4.drate.mg.h)))*24)%>%
   group_by(Station.ID)%>%
   summarise(ch4=mean(ch4),Depth=mean(Depth))%>%
   ggplot(aes(x=Depth,y=ch4))+
