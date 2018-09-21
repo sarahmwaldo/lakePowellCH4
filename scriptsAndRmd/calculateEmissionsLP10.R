@@ -498,10 +498,19 @@ lakePowellData10<-mutate(lakePowellData10,
 #   mutate(MethEbullition=ifelse(CH4.funnel.flux>0,CH4.funnel.flux,0))
 #####------
 
+<<<<<<< HEAD
 lakePowellData10$site<-translationKey[match(lakePowellData10$Station.ID, translationKey$Station.ID), 1]
 #select(lakePowellData10, Station.ID, site)
 
 lakePowellDataSubset<-select(lakePowellData10, Station.ID, site, lat, long, RDateTime, 
+||||||| merged common ancestors
+lakePowellDataSubset<-select(lakePowellData10, Station.ID, site, rep, lat, long, RDateTime, 
+=======
+lakePowellData10$site<-translationKey[match(lakePowellData10$Station.ID, translationKey$Station.ID), 1]
+select(lakePowellData10, Station.ID, site)
+
+lakePowellDataSubset<-select(lakePowellData10, Station.ID, site, rep, lat, long, RDateTime, 
+>>>>>>> 34c6a6b19037902c1fa6beb121f9fef3e869f0c4
                              ch4.drate.mg.h, co2.drate.mg.h, ch4.trate.mg.h, co2.trate.mg.h, 
                              ch4.slope.err, co2.slope.err, ch4.drate.U, ch4.drate.L, co2.drate.U, co2.drate.L,
                              CH4.chamber.eb, CH4.funnel.eb, CO2.chamber.eb, CO2.funnel.eb)
@@ -533,11 +542,12 @@ lakePowellDataSubset<-mutate(lakePowellDataSubset,
                                                    site == "Camp 2",
                                                    camp2co2))
 ###now we can calculate total emissions:
+
+
 lakePowellDataSubset<-lakePowellDataSubset%>%
   rowwise()%>%
   mutate(CH4.trate.best = sum(ch4.drate.mg.h, CH4.eb.best, na.rm = TRUE),
          CO2.trate.best = sum(co2.drate.mg.h, CO2.eb.best, na.rm = TRUE))
-
 
 #Now make a vector that just has the depth for each site added into the lakePowellData1
 
