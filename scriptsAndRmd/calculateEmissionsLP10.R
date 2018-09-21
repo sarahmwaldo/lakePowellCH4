@@ -9,8 +9,8 @@
 # STEP 3: MERGE WITH eqAreaData
 
 #Bridget is testing GitHub
-
-lakePowellData10<-filter(lakePowellData10, site!="SJR Inlet End", #SJR inlet end was recorded for the lat/long, but isn't a separate observation
+lakePowellData10.orig<-lakePowellData10
+lakePowellData10<-filter(lakePowellData10.orig, site!="SJR Inlet End", #SJR inlet end was recorded for the lat/long, but isn't a separate observation
                              rep!=4) #Camp 3, rep 4 is the measurement taken in the morning after the chamber was left on the water all night. 
                                      #There is a negative methane regression, indicating uptake, but this is an artifact. This is the only rep=4 in the dataset. 
 
@@ -408,10 +408,13 @@ lakePowellData10$site<-ifelse(lakePowellData10$site == "wahweap", "Wahweap", lak
 lakePowellData10$site<-ifelse(lakePowellData10$site == "crossing of the fathers", "Crossing of the Fathers", lakePowellData10$site)
 
 lakePowellData10$Station.ID<-c("LPCR1","LPCR1","LPCR0024","LPCR0024","LPCR0155","LPCR0453","LPCR0905","LPCR1001","LPSJR070","LPSJR193",
-                               "LPCR2","LPCR2","LPCR2","LPSJR431","LPSJR530","LPSJR530","LPSJR730","LPCR3","LPCR3","LPCR3","LPCR3",
+                               "LPCR2","LPCR2","LPCR2","LPSJR431","LPSJR530","LPSJR530","LPSJRINF","LPCR3","LPCR3","LPCR3","LPCR3",
                                "LPCR3","LPCR3","LPCRINF","LPCRINF","LPCRINF2","LPCRsheep","LPCR2387","LPCR2255","LPCR2085","LPCR1933",
                                "LPCR1799","LPCR1679","LPCR1587","LPCR4","LPCR4","LPESCINF","LPESC273","LPESC119","LPESC030","LPCR1169",
                                "LPCR0024","LPCR0453","LPCRsheep")
+#check Station.ID and site match
+translationKey<-select(lakePowellData10, site, Station.ID)
+  
 
 ###total (aka to determine ebullition) at the following sites:
 #Camp2, Alcove, SJR Inlet, Colorado Inlet,  
@@ -430,7 +433,7 @@ lakePowellData10<-mutate(lakePowellData10,
                          ch4.drate.U=ch4.drate.mg.h*(1+ch4.slope.err),
                          ch4.drate.L=ch4.drate.mg.h*(1-ch4.slope.err),
                          co2.drate.U=co2.drate.mg.h*(1+co2.slope.err),
-                         co2.drate.L=co2.drate.mg.h*(1-co2.slope.err),)
+                         co2.drate.L=co2.drate.mg.h*(1-co2.slope.err))
 
 OUT10<-OUT
 
@@ -442,18 +445,19 @@ lakePowellFunnel<-read_xlsx(paste(myWD, "input/ebFluxCalcsPowell.xlsx", sep="/")
 lakePowellFunnel$site<-lakePowellFunnel$Site
 lakePowellFunnel<-(select(lakePowellFunnel, site, CH4.funnel.flux, CO2.funnel.flux, N2O.funnel.flux))%>%
   filter(!is.na(lakePowellFunnel$CH4.funnel.flux))
-lakePowellFunnel<-select(lakePowellFunnel, -site)
+
 
 #add station ID's to this data frame, assigning LPCR5 and LPCR6 to WAH01 and WAH02, respectively
 lakePowellFunnel$Station.ID<-c("LPCR4", "LPCR3", "LPCR2", 
-                               "LPCR0024", "LPCR0024")
+                               "LPCR0024", "LPCR0024", "LPCR1")
+lakePowellFunnel<-select(lakePowellFunnel, -site)
 #summarise with mean values for each site
 
 lakePowellFunnelsum<-lakePowellFunnel %>%
   group_by(Station.ID)%>%
   summarise_all(mean)
 
-lakePowellData10sum<-lakePowellData10 %>%
+lakePowellData10sum<-lakePowellData10 %>% #this step eliminates everything that can't be averaged
   group_by(Station.ID)%>%
   summarise_all(mean)
 
@@ -494,6 +498,9 @@ lakePowellData10<-mutate(lakePowellData10,
 #   mutate(MethEbullition=ifelse(CH4.funnel.flux>0,CH4.funnel.flux,0))
 #####------
 
+lakePowellData10$site<-translationKey[match(lakePowellData10$Station.ID, translationKey$Station.ID), 1]
+select(lakePowellData10, Station.ID, site)
+
 lakePowellDataSubset<-select(lakePowellData10, Station.ID, site, rep, lat, long, RDateTime, 
                              ch4.drate.mg.h, co2.drate.mg.h, ch4.trate.mg.h, co2.trate.mg.h, 
                              ch4.slope.err, co2.slope.err, ch4.drate.U, ch4.drate.L, co2.drate.U, co2.drate.L,
@@ -526,9 +533,14 @@ lakePowellDataSubset<-mutate(lakePowellDataSubset,
                                                    site == "Camp 2",
                                                    camp2co2))
 ###now we can calculate total emissions:
-lakePowellDataSubset<-mutate(lakePowellDataSubset,
-                             CH4.trate.best = ch4.drate.mg.h+CH4.eb.best,
-                             CO2.trate.best = co2.drate.mg.h+CO2.eb.best)
+lakePowellDataSubset<-lakePowellDataSubset%>%
+  rowwise()%>%
+  mutate(CH4.trate.best = sum(ch4.drate.mg.h, CH4.eb.best, na.rm = TRUE),
+         CO2.trate.best = sum(co2.drate.mg.h, CO2.eb.best, na.rm = TRUE))
+
+#scrub any Station.ID AND rep duplicates introduced somewhere:
+lakePowell.ds<-subset(lakePowellDataSubset, !duplicated(Station.ID))
+
 
 #Now make a vector that just has the depth for each site added into the lakePowellData1
 
