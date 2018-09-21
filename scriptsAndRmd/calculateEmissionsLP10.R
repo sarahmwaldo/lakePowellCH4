@@ -446,10 +446,19 @@ lakePowellFunnel<-select(lakePowellFunnel, -site)
 
 #add station ID's to this data frame, assigning LPCR5 and LPCR6 to WAH01 and WAH02, respectively
 lakePowellFunnel$Station.ID<-c("LPCR4", "LPCR3", "LPCR2", 
-                               "LPCR5", "LPCR6", "LPCR1")
+                               "LPCR0024", "LPCR0024")
+#summarise with mean values for each site
+
+lakePowellFunnelsum<-lakePowellFunnel %>%
+  group_by(Station.ID)%>%
+  summarise_all(mean)
+
+lakePowellData10sum<-lakePowellData10 %>%
+  group_by(Station.ID)%>%
+  summarise_all(mean)
 
 #merge with the main data frame 
-lakePowellData10<-merge(lakePowellData10, lakePowellFunnel, 
+lakePowellData10<-merge(lakePowellData10sum, lakePowellFunnelsum, 
                             by.x="Station.ID", by.y="Station.ID", all=TRUE)
 #unique(lakePowellData10test$site)
 
