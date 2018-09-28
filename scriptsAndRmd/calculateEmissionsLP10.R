@@ -449,9 +449,9 @@ lakePowellFunnel<-(select(lakePowellFunnel, site, CH4.funnel.flux, CO2.funnel.fl
 
 #add station ID's to this data frame, assigning LPCR5 and LPCR6 to WAH01 and WAH02, respectively
 lakePowellFunnel$Station.ID<-c("LPCR4", "LPCR3", "LPCR2", 
-                               "LPCR0024", "LPCR0024", "LPCR1")
+                               "LPCR0024", "LPCR0024")
 lakePowellFunnel<-select(lakePowellFunnel, -site)
-#summarise with mean values for each site
+#summarise with mean values for each site--  
 
 lakePowellFunnelsum<-lakePowellFunnel %>%
   group_by(Station.ID)%>%
