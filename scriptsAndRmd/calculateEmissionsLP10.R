@@ -498,19 +498,11 @@ lakePowellData10<-mutate(lakePowellData10,
 #   mutate(MethEbullition=ifelse(CH4.funnel.flux>0,CH4.funnel.flux,0))
 #####------
 
-<<<<<<< HEAD
+#enters in names
 lakePowellData10$site<-translationKey[match(lakePowellData10$Station.ID, translationKey$Station.ID), 1]
 #select(lakePowellData10, Station.ID, site)
 
 lakePowellDataSubset<-select(lakePowellData10, Station.ID, site, lat, long, RDateTime, 
-||||||| merged common ancestors
-lakePowellDataSubset<-select(lakePowellData10, Station.ID, site, rep, lat, long, RDateTime, 
-=======
-lakePowellData10$site<-translationKey[match(lakePowellData10$Station.ID, translationKey$Station.ID), 1]
-select(lakePowellData10, Station.ID, site)
-
-lakePowellDataSubset<-select(lakePowellData10, Station.ID, site, rep, lat, long, RDateTime, 
->>>>>>> 34c6a6b19037902c1fa6beb121f9fef3e869f0c4
                              ch4.drate.mg.h, co2.drate.mg.h, ch4.trate.mg.h, co2.trate.mg.h, 
                              ch4.slope.err, co2.slope.err, ch4.drate.U, ch4.drate.L, co2.drate.U, co2.drate.L,
                              CH4.chamber.eb, CH4.funnel.eb, CO2.chamber.eb, CO2.funnel.eb)
