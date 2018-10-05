@@ -26,7 +26,7 @@ depthmax_seabird <- seabird %>%
 #call the diffusive flux data that Sarah put toether
 #just changed this to pull in the output file, but if you want to compare with what we were looking at previously
 #you can change it back to the diffusive fluxes in the input folder
-diffusive<-read.csv(paste(myWD, "input/powellDiffusiveFluxes.csv", sep="/")) 
+diffusive<-read.csv(paste(myWD, "output/lakePowellFluxes.csv", sep="/")) 
 head(diffusive)
 
 #join diffusive fluxes with surface seabird data
@@ -77,18 +77,18 @@ co2Chl
 #when joined, ch4.drate.mg.h became a factor. convert to numeric:
 surface_seabird_diffusive$ch4.drate.mg.h<-as.numeric(as.character(surface_seabird_diffusive$ch4.drate.mg.h))
 
-#ch4dist<-filter(surface_seabird_diffusive, River_arm != "") %>%
-ch4dist<-surface_seabird_diffusive %>% 
-  mutate(ch4=ch4.drate.mg.h*24)%>%
-  ggplot(aes(x=Distance,y=ch4))+
+#surface_seabird_diffusive$Distance<-c(2.4,15.5,45.3,90.5,100.1,)
+#ch4dist<-surface_seabird_diffusive %>% 
+  #mutate(ch4=ch4.drate.mg.h*24)%>%
+  #ggplot(aes(x=Distance,y=ch4))+
   #facet_grid(.~River_arm)+
-  geom_point()+
-  theme_bw()+
-  theme(panel.grid.major=element_blank(),panel.grid.minor=element_blank(),axis.line=element_line(colour="black"),
-        plot.margin= unit(c(0,0,0,1.5),"cm"))+
-  ylab(expression(paste("Diffusive CH4 Emission mg m-2 d-1")))+
-  xlab(expression(paste("Distance Upstream from Dam")))
-ch4dist
+  #geom_point()+
+  #theme_bw()+
+  #theme(panel.grid.major=element_blank(),panel.grid.minor=element_blank(),axis.line=element_line(colour="black"),
+        #plot.margin= unit(c(0,0,0,1.5),"cm"))+
+  #ylab(expression(paste("Diffusive CH4 Emission mg m-2 d-1")))+
+  #xlab(expression(paste("Distance Upstream from Dam")))
+#ch4dist
 
 ch4Chl<-surface_seabird_diffusive %>%
   mutate(ch4=as.numeric(CH4.trate.best)*24)%>%
