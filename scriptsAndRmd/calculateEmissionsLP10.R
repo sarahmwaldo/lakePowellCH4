@@ -541,7 +541,8 @@ lakePowellDataSubset<-lakePowellDataSubset%>%
   mutate(CH4.trate.best = sum(ch4.drate.mg.h, CH4.chamber.eb, na.rm = TRUE),
          CO2.trate.best = sum(co2.drate.mg.h, CO2.chamber.eb, na.rm = TRUE),
          CH4.trate.best.equiv = (CH4.trate.best*34),
-         CH4.funnel.eb.equiv = (CH4.funnel.eb *34))
+         CH4.funnel.eb.equiv = (CH4.funnel.eb *34),
+         CO2eq.trate.best=sum(CH4.trate.best.equiv,CO2.trate.best))
 
 #Now make a vector that just has the depth for each site added into the lakePowellData1
 
