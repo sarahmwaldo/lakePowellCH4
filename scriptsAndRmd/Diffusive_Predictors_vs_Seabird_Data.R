@@ -8,8 +8,13 @@
 seabird<-read.csv(paste(myWD, "input/tblProfiles_July2017_Query.csv", sep="/"))
 depths<-read.csv(paste(myWD,"input/SiteDepths.csv", sep="/"))
 
+seabird$Station.ID<-gsub("LPSJR767","LPSJRINF",seabird$Station.ID)
+seabird$Station.ID<-gsub("LPCR2880","LPCRINF",seabird$Station.ID)
+seabird$Station.ID<-gsub("LPESC334","LPESCINF",seabird$Station.ID)
+
 seabirdsurface<-seabird %>%
-  filter(Depth==1)
+  group_by(Station.ID)%>%
+  filter(Depth==min(Depth))
 
 chlaseabird<-seabird %>%
   group_by(Date,Station.ID) %>%
@@ -196,6 +201,8 @@ co2depth
 #### Now Load Nutrient/Ion Data and Make a Master Datafile that Combines all the Predictor Information
 chemistry<-read.csv(paste(myWD, "input/July_2017_nutrients_for_GHG.csv", sep="/")) 
 head(chemistry)
+chemsum<-chemistry %>%
+  filter(Depth<2)
 
 depthmax_seabird$Depthmax<-depthmax_seabird$Depth
 depthmax<-data.frame(depthmax_seabird$Station.ID,depthmax_seabird$Depthmax)
@@ -204,12 +211,95 @@ colnames(depthmax)<-c("Station.ID","depthmax")
 chlamax<-data.frame(chlamax_seabird_diffusive$Chl,chlamax_seabird_diffusive$Station.ID)
 colnames(chlamax)<-c("chlamax","Station.ID")
 
-master<-left_join(lakePowellDataSubset,chemistry,by="Station.ID")
-master<-left_join(master,depthmax,by="Station.ID")
+seabirdbottom<-seabird %>%
+  group_by(Station.ID)%>%
+  filter(Depth==max(Depth))%>%
+  select(Station.ID,Depth,T,Cond,DO,pH,ORP,Turb,Chl)
+colnames(seabirdbottom)<-c("Station.ID","BottomDepth","BottomTemp","BottomCond","BottomDO","BottompH","BottomORP","BottomTurb","BottomChl")
+
+seabirdsurfaceformaster<-seabirdsurface %>%
+  select(Station.ID,Chl,T,pH)
+colnames(seabirdsurfaceformaster)<-c("Station.ID","SurfaceChl","SurfaceTemp","SurfacepH")
+
+master<-left_join(lakePowellDataSubset,chemsum,by="Station.ID")
+master<-left_join(master,depths,by="Station.ID")
 master<-left_join(master, chlamax,by="Station.ID")
-master<-left_join(master,chemistry,by="Station.ID")
+master<-left_join(master, seabirdbottom, by="Station.ID")
+master<-left_join(master, seabirdsurfaceformaster,by="Station.ID")
+
 
 write.table(master, 
             file=paste(myWD, "output/master.csv", sep="/"),
             sep=",",
             row.names=FALSE)
+
+#### Now try modeling the fluxes using glm
+
+library(glmm)
+
+
+#pull out subset of master list that has chemistry and seabird data
+mastersub<- master %>%
+  filter(!is.na(Ca))
+  #filter(!is.na(chlamax))
+
+#Single Predictors of CH4
+summary(glm(mastersub$CH4.trate.best~mastersub$SurfaceChl)) #78
+summary(glm(mastersub$CH4.trate.best~mastersub$Depth.y)) #77
+summary(glm(mastersub$CH4.trate.best~mastersub$Total.P..mg.L)) #56
+summary(glm(mastersub$CH4.trate.best~mastersub$SO4)) #77
+summary(glm(mastersub$CH4.trate.best~mastersub$BottomTemp)) #74
+summary(glm(mastersub$CH4.trate.best~mastersub$BottomCond)) #79
+summary(glm(mastersub$CH4.trate.best~mastersub$BottomTurb)) #75
+summary(glm(mastersub$CH4.trate.best~mastersub$Total.N.mg.L)) #75
+
+## So let's say our best model is TP, now we try adding variables
+summary(glm(mastersub$CH4.trate.best~mastersub$Total.P..mg.L+mastersub$SurfaceChl)) #53
+summary(glm(mastersub$CH4.trate.best~mastersub$Total.P..mg.L+mastersub$BottomTemp)) #53
+summary(glm(mastersub$CH4.trate.best~mastersub$Total.P..mg.L+mastersub$Depth.y)) #48.8
+summary(glm(mastersub$CH4.trate.best~mastersub$Total.P..mg.L+mastersub$BottomCond)) #38.1
+summary(glm(mastersub$CH4.trate.best~mastersub$Total.P..mg.L+mastersub$BottomTurb)) #46.4
+summary(glm(mastersub$CH4.trate.best~mastersub$Total.P..mg.L+mastersub$Total.N.mg.L)) #56
+# Total Nitrogen is uninformative
+
+#Interactions
+
+summary(glm(mastersub$CH4.trate.best~mastersub$BottomTemp*mastersub$Total.P..mg.L)) #5.6
+summary(glm(mastersub$CH4.trate.best~mastersub$BottomTemp*mastersub$BottomTurb)) #77.6
+summary(glm(mastersub$CH4.trate.best~mastersub$BottomTemp*mastersub$BottomCond)) #56.5
+summary(glm(mastersub$CH4.trate.best~mastersub$BottomTemp*mastersub$Depth.y)) #72
+summary(glm(mastersub$CH4.trate.best~mastersub$BottomCond*mastersub$Total.P..mg.L)) #39
+summary(glm(mastersub$CH4.trate.best~mastersub$BottomCond*mastersub$BottomTemp)) #56
+
+#BEST CH4 MODEL IS Interactive WITH Bottom Temperature and TP as predictors
+
+
+#Single Predictors of CO2
+summary(glm(mastersub$CO2.trate.best~mastersub$SurfacepH)) #103
+summary(glm(mastersub$CO2.trate.best~mastersub$Depth.y)) #115
+summary(glm(mastersub$CO2.trate.best~mastersub$Total.P..mg.L)) #115
+summary(glm(mastersub$CO2.trate.best~mastersub$Ca)) #103
+summary(glm(mastersub$CO2.trate.best~mastersub$SurfaceTemp)) #115
+summary(glm(mastersub$CO2.trate.best~mastersub$SurfaceChl)) #114
+summary(glm(mastersub$CO2.trate.best~mastersub$BottomTurb)) #114
+summary(glm(mastersub$CO2.trate.best~mastersub$Total.N.mg.L)) #113
+summary(glm(mastersub$CO2.trate.best~mastersub$HCO3)) #109.6
+
+## So let's say our best model is pH
+summary(glm(mastersub$CO2.trate.best~mastersub$SurfacepH+mastersub$Ca)) #102
+#calcium is uninformative once surface pH is considered
+summary(glm(mastersub$CO2.trate.best~mastersub$SurfacepH+mastersub$SurfaceTemp))#104
+#water temp is also uninformative
+summary(glm(mastersub$CO2.trate.best~mastersub$SurfacepH+mastersub$SurfaceChl))#105
+#surface chlorophyll is also uninformative
+summary(glm(mastersub$CO2.trate.best~mastersub$SurfacepH+mastersub$Depth.y))#105
+#depth also uninformative
+summary(glm(mastersub$CO2.trate.best~mastersub$SurfacepH+mastersub$HCO3))#99.5
+#just barely improves the model
+
+#Interactions
+
+summary(glm(mastersub$CO2.trate.best~mastersub$SurfacepH*mastersub$HCO3)) #98.9
+
+#BEST CO2 MODEL IS ADDITIVE WITH pH and bicarbonate concentration as predictors
+
