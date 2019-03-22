@@ -80,12 +80,12 @@ ggplot(lakePowellBySite,
   theme(legend.position = "none")
 
 
-lakePowellEb.m$ebSite<-orderSite(lakePowellEb.m, "ch4.eb")
+lakePowellDataSubset$ebSite<-orderSite(lakePowellDataSubset, "CH4.eb.best")
 
 #CH4 ebullitive emissions
-ggplot(filter(lakePowellEb.m, variable == "CH4.funnel.eb" | variable == "CH4.chamber.eb"),
-                aes(value*24, ebSite)) +
-  geom_point(alpha=0.5, aes(shape = variable), size=2) +
+ggplot(lakePowellDataSubset,
+                aes(CH4.eb.best, ebSite)) +
+  geom_point(alpha=0.5, aes(size=2)) +
   #geom_point(lakePowellData10, aes(CH4.funnel.flux*24, eSite))+
   xlab(expression(CH[4]~ebullitive~emission~rate~(mg~ CH[4]~ m^{-2}~ d^{-1}))) +
   theme(axis.title.y = element_blank(), # Eliminate x-axis title

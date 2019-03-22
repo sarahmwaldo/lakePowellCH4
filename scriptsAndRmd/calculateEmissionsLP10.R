@@ -406,10 +406,11 @@ lakePowellData10$site<-ifelse(lakePowellData10$site == "oak canyon", "Oak Canyon
 lakePowellData10$site<-ifelse(lakePowellData10$site == "navajo", "Navajo", lakePowellData10$site)
 lakePowellData10$site<-ifelse(lakePowellData10$site == "wahweap", "Wahweap", lakePowellData10$site)
 lakePowellData10$site<-ifelse(lakePowellData10$site == "crossing of the fathers", "Crossing of the Fathers", lakePowellData10$site)
+lakePowellData10$site<-ifelse(lakePowellData10$site == "Colorado Inlet End", "Colorado Inlet", lakePowellData10$site) #3/22/2019, deemer & waldo decided CO inlet and CO inlet end should count as the same site
 
 lakePowellData10$Station.ID<-c("LPCR1","LPCR1","LPCR0024","LPCR0024","LPCR0155","LPCR0453","LPCR0905","LPCR1001","LPSJR070","LPSJR193",
                                "LPCR2","LPCR2","LPCR2","LPSJR431","LPSJR530","LPSJR530","LPSJRINF","LPCR3","LPCR3","LPCR3","LPCR3",
-                               "LPCR3","LPCR3","LPCRINF","LPCRINF","LPCRINF2","LPCRsheep","LPCR2387","LPCR2255","LPCR2085","LPCR1933",
+                               "LPCR3","LPCR3","LPCRINF","LPCRINF","LPCRINF","LPCRsheep","LPCR2387","LPCR2255","LPCR2085","LPCR1933",
                                "LPCR1799","LPCR1679","LPCR1587","LPCR4","LPCR4","LPESCINF","LPESC273","LPESC119","LPESC030","LPCR1169",
                                "LPCR0024","LPCR0453","LPCRsheep")
 #check Station.ID and site match
@@ -452,17 +453,30 @@ lakePowellFunnel$Station.ID<-c("LPCR4", "LPCR3", "LPCR2",
                                "LPCRWah01", "LPCRWah02","LPCR1")
 lakePowellFunnel<-select(lakePowellFunnel, -site)
 #summarise with mean values for each site--  
-
-lakePowellFunnelsum<-lakePowellFunnel %>%
-  group_by(Station.ID)%>%
-  summarise_all(mean)
-
-lakePowellData10sum<-lakePowellData10 %>% #this step eliminates everything that can't be averaged
-  group_by(Station.ID)%>%
-  summarise_all(mean)
+lakePowellFunnelmeans<-lakePowellFunnel %>%
+   group_by(Station.ID)%>%
+   dplyr::summarise(meanCH4.funnel = mean(CH4.funnel.flux),
+                    meanCO2.funnel = mean(CO2.funnel.flux),
+                    meanN2O.funnel = mean(N2O.funnel.flux))
+ 
+lakePowellChamberMeans<-lakePowellData10 %>% #this step eliminates everything that can't be averaged
+   group_by(Station.ID)%>%
+   dplyr::summarise(CH4drate.mean = mean(ch4.drate.mg.h, na.rm=TRUE),
+                    CH4drate.sd = sd(ch4.drate.mg.h, na.rm=TRUE),
+                    CO2drate.mean = mean(co2.drate.mg.h, na.rm=TRUE),
+                    CO2drate.sd = sd(co2.drate.mg.h, na.rm=TRUE),
+                    CH4trate.mean = mean(ch4.trate.mg.h, na.rm=TRUE),
+                    CH4trate.sd = sd(ch4.trate.mg.h, na.rm=TRUE),
+                    CO2trate.mean = mean(co2.trate.mg.h, na.rm=TRUE),
+                    CO2trate.sd = sd(co2.trate.mg.h, na.rm=TRUE),
+                    CH4erate.mean = mean(ch4.erate, na.rm=TRUE),
+                    CH4erate.sd = sd(ch4.erate, na.rm=TRUE),
+                    CO2erate.mean = mean(co2.erate, na.rm=TRUE),
+                    CO2erate.sd = sd(co2.erate, na.rm=TRUE),
+                    reps = n())
 
 #merge with the main data frame 
-lakePowellData10<-merge(lakePowellData10sum, lakePowellFunnelsum, 
+lakePowellMeans<-merge(lakePowellChamberMeans, lakePowellFunnelmeans, 
                             by.x="Station.ID", by.y="Station.ID", all=TRUE)
 #unique(lakePowellData10test$site)
 
@@ -499,56 +513,73 @@ lakePowellData10<-mutate(lakePowellData10,
 #####------
 
 #enters in names
-lakePowellData10$site<-translationKey[match(lakePowellData10$Station.ID, translationKey$Station.ID), 1]
+#lakePowellData10$site<-translationKey[match(lakePowellData10$Station.ID, translationKey$Station.ID), 1]
+lakePowellMeans$site<-translationKey[match(lakePowellMeans$Station.ID, translationKey$Station.ID), 1]
 #select(lakePowellData10, Station.ID, site)
 
-lakePowellDataSubset<-select(lakePowellData10, Station.ID, site, lat, long, RDateTime, 
-                             ch4.drate.mg.h, co2.drate.mg.h, ch4.trate.mg.h, co2.trate.mg.h, 
-                             ch4.slope.err, co2.slope.err, ch4.drate.U, ch4.drate.L, co2.drate.U, co2.drate.L,
-                             CH4.chamber.eb, CH4.funnel.eb, CO2.chamber.eb, CO2.funnel.eb)
-#Now make vectors of CH4 and CO2 ebullition best number for each site
+# lakePowellDataSubset<-select(lakePowellData10, Station.ID, site, lat, long, RDateTime, 
+#                              ch4.drate.mg.h, co2.drate.mg.h, ch4.trate.mg.h, co2.trate.mg.h, 
+#                              ch4.slope.err, co2.slope.err, ch4.drate.U, ch4.drate.L, co2.drate.U, co2.drate.L,
+#                              CH4.chamber.eb, CH4.funnel.eb, CO2.chamber.eb, CO2.funnel.eb)
+# #Now make vectors of CH4 and CO2 ebullition best number for each site
 #then we can calculate total emissions for each site
 
   #the only site with BOTH chamber and funnel eb msmts is Camp 2, 
   #otherwise, we can pick from which msmt is available:
-lakePowellDataSubset$CH4.eb.best<-ifelse(
-  is.na(lakePowellDataSubset$CH4.funnel.eb),
-  lakePowellDataSubset$CH4.chamber.eb, #value if funnel eb is NA
-  lakePowellDataSubset$CH4.funnel.eb) #value if it is a number
-                                                       
-lakePowellDataSubset$CO2.eb.best<-ifelse(
-  is.na(lakePowellDataSubset$CO2.funnel.eb),
-  lakePowellDataSubset$CO2.chamber.eb, #value if funnel eb is NA
-  lakePowellDataSubset$CO2.funnel.eb) #value if it is a number         
+# lakePowellDataSubset$CH4.eb.best<-ifelse(
+#   is.na(lakePowellDataSubset$CH4.funnel.eb),
+#   lakePowellDataSubset$CH4.chamber.eb, #value if funnel eb is NA
+#   lakePowellDataSubset$CH4.funnel.eb) #value if it is a number
+
+###Don't do this anymore -- keeping funnels separate!
+# lakePowellMeans$CH4.eb.best<-ifelse(
+#    is.na(lakePowellMeans$meanCH4.funnel),
+#    lakePowellMeans$CH4erate.mean, #value if funnel eb is NA
+#    lakePowellMeans$meanCH4.funnel)
+#                                                        
+# lakePowellMeans$CO2.eb.best<-ifelse(
+#   is.na(lakePowellMeans$meanCO2.funnel),
+#   lakePowellMeans$CO2erate.mean, #value if funnel eb is NA
+#   lakePowellMeans$meanCO2.funnel) #value if it is a number         
 
 #Do we trust the funnel numbers more than the chamber numbers?
 #If not, we should average the measurements for Camp 2
-camp2co2<-mean(1.071453, 0.018879, 13.13)
-camp2ch4<-mean(0.1698103, 0.141869, 0.0322)
+# camp2co2<-mean(1.071453, 0.018879, 13.13)
+# camp2ch4<-mean(0.1698103, 0.141869, 0.0322)
+# 
+# lakePowellDataSubset<-mutate(lakePowellDataSubset,
+#                              CH4.eb.best = replace(CH4.eb.best, 
+#                                                    site == "Camp 2",
+#                                                    camp2ch4),
+#                              CO2.eb.best = replace(CO2.eb.best, 
+#                                                    site == "Camp 2",
+#                                                    camp2co2))
+###now we can re-calculate total emissions:
+# lakePowellMeans<-lakePowellMeans%>%
+#   rowwise()%>%
+#   mutate(CH4trate.mean=sum(CH4drate.mean,CH4erate.mean,na.rm=TRUE), 
+#          CO2trate.mean=sum(CO2drate.mean+CO2erate.mean, na.rm=TRUE))
 
-lakePowellDataSubset<-mutate(lakePowellDataSubset,
-                             CH4.eb.best = replace(CH4.eb.best, 
-                                                   site == "Camp 2",
-                                                   camp2ch4),
-                             CO2.eb.best = replace(CO2.eb.best, 
-                                                   site == "Camp 2",
-                                                   camp2co2))
-###now we can calculate total emissions:
 
 
-lakePowellDataSubset<-lakePowellDataSubset%>%
-  rowwise()%>%
-  mutate(CH4.trate.best = sum(ch4.drate.mg.h, CH4.chamber.eb, na.rm = TRUE),
-         CO2.trate.best = sum(co2.drate.mg.h, CO2.chamber.eb, na.rm = TRUE),
-         CH4.trate.best.equiv = (CH4.trate.best*34),
-         CH4.funnel.eb.equiv = (CH4.funnel.eb *34),
-         CO2eq.trate.best=sum(CH4.trate.best.equiv,CO2.trate.best),
-         CO2eq.funnel.eb=sum(CH4.funnel.eb.equiv,CO2.funnel.eb))
+# lakePowellDataSubset<-lakePowellDataSubset%>%
+#   rowwise()%>%
+#   mutate(CH4.trate.best = sum(ch4.drate.mg.h, CH4.chamber.eb, na.rm = TRUE),
+#          CO2.trate.best = sum(co2.drate.mg.h, CO2.chamber.eb, na.rm = TRUE),
+#          CH4.trate.best.equiv = (CH4.trate.best*34),
+#          CH4.funnel.eb.equiv = (CH4.funnel.eb *34),
+#          CO2eq.trate.best=sum(CH4.trate.best.equiv,CO2.trate.best),
+#          CO2eq.funnel.eb=sum(CH4.funnel.eb.equiv,CO2.funnel.eb))
 
 #Now make a vector that just has the depth for each site added into the lakePowellData1
+write.table(lakePowellMeans, 
+            file=paste(myWD, "output/lakePowellFluxes20190322.csv", sep="/"),
+            sep=",",
+            row.names=FALSE)
+
 
 write.table(lakePowellDataSubset, 
-            file=paste(myWD, "output/lakePowellFluxes.csv", sep="/"),
+            file=paste(myWD, "output/lakePowellFluxes20190322.csv", sep="/"),
             sep=",",
             row.names=FALSE)
 
