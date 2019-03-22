@@ -204,6 +204,12 @@ head(chemistry)
 chemsum<-chemistry %>%
   filter(Depth<2)
 
+chemsurface<-chemistry %>%
+  group_by(Station.ID)%>%
+  filter(Depth==min(Depth))%>%
+  select(Station.ID, HCO3, Ca)
+colnames(chemsurface)<-c("Station.ID","SurfaceHCO3","SurfaceCa")
+
 depthmax_seabird$Depthmax<-depthmax_seabird$Depth
 depthmax<-data.frame(depthmax_seabird$Station.ID,depthmax_seabird$Depthmax)
 colnames(depthmax)<-c("Station.ID","depthmax")
@@ -226,6 +232,7 @@ master<-left_join(master,depths,by="Station.ID")
 master<-left_join(master, chlamax,by="Station.ID")
 master<-left_join(master, seabirdbottom, by="Station.ID")
 master<-left_join(master, seabirdsurfaceformaster,by="Station.ID")
+master<-left_join(master, chemsurface,by="Station.ID")
 
 
 write.table(master, 
@@ -278,15 +285,15 @@ summary(glm(mastersub$CH4.trate.best~mastersub$BottomCond*mastersub$BottomTemp))
 summary(glm(mastersub$CO2.trate.best~mastersub$SurfacepH)) #103
 summary(glm(mastersub$CO2.trate.best~mastersub$Depth.y)) #115
 summary(glm(mastersub$CO2.trate.best~mastersub$Total.P..mg.L)) #115
-summary(glm(mastersub$CO2.trate.best~mastersub$Ca)) #103
+summary(glm(mastersub$CO2.trate.best~mastersub$SurfaceCa)) #103
 summary(glm(mastersub$CO2.trate.best~mastersub$SurfaceTemp)) #115
 summary(glm(mastersub$CO2.trate.best~mastersub$SurfaceChl)) #114
 summary(glm(mastersub$CO2.trate.best~mastersub$BottomTurb)) #114
 summary(glm(mastersub$CO2.trate.best~mastersub$Total.N.mg.L)) #113
-summary(glm(mastersub$CO2.trate.best~mastersub$HCO3)) #109.6
+summary(glm(mastersub$CO2.trate.best~mastersub$SurfaceHCO3)) #109.6
 
 ## So let's say our best model is pH
-summary(glm(mastersub$CO2.trate.best~mastersub$SurfacepH+mastersub$Ca)) #102
+summary(glm(mastersub$CO2.trate.best~mastersub$SurfacepH+mastersub$SurfaceCa)) #102
 #calcium is uninformative once surface pH is considered
 summary(glm(mastersub$CO2.trate.best~mastersub$SurfacepH+mastersub$SurfaceTemp))#104
 #water temp is also uninformative
@@ -294,7 +301,7 @@ summary(glm(mastersub$CO2.trate.best~mastersub$SurfacepH+mastersub$SurfaceChl))#
 #surface chlorophyll is also uninformative
 summary(glm(mastersub$CO2.trate.best~mastersub$SurfacepH+mastersub$Depth.y))#105
 #depth also uninformative
-summary(glm(mastersub$CO2.trate.best~mastersub$SurfacepH+mastersub$HCO3))#99.5
+summary(glm(mastersub$CO2.trate.best~mastersub$SurfacepH+mastersub$SurfaceHCO3))#99.5
 #just barely improves the model
 
 #Interactions
