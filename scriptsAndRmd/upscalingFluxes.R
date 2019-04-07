@@ -62,7 +62,7 @@ LP.openWater.summary<-LP.openWater%>%
             fracErrOw.L = abs(meanCH4ow-CH4lower)/meanCH4ow*100,
             fracErrOw.U = abs(meanCH4ow-CH4upper)/meanCH4ow*100)
 
-meanCH4ow<-mean(LP.openWater$CH4trate.mean) #mean CH4 emission rate from littoral sites in mg CH4 m-2 hr-1
+meanCH4ow<-mean(LP.openWater$CH4trate.mean) #mean CH4 emission rate from open water sites in mg CH4 m-2 hr-1
 #convert from mg CH4 to kg CH4; m2 to km2; then upscaling to total littoral area (33.2 km2); convert from hr-1 to y-1
 totCH4.ow.kg.y<-meanCH4ow/10^6*1000^2*(467-33.2)*24*365 #units: kg CH4 y-1 
 ErrCH4L.ow.kg.y<-LP.openWater.summary$fracErrOw.L/100*totCH4.ow.kg.y
