@@ -35,6 +35,8 @@ diffusive<-read.csv(paste(myWD, "output/lakePowellFluxes20190322.csv", sep="/"))
 head(diffusive)
 
 #join diffusive fluxes with surface seabird data
+diffusive$Station.ID<-as.character(diffusive$Station.ID)
+
 surface_seabird_diffusive<-inner_join(seabirdsurface,diffusive,by="Station.ID")
 # head(surface_seabird_diffusive)
 # str(surface_seabird_diffusive)
@@ -328,11 +330,7 @@ master$region<-ifelse(master$site.x %in% Littoral_Tributary,"tributary","main")
 
 summary_table<-master %>%
   group_by(region)%>%
-  summarise(CH4trate.mean=mean(CH4trate.mean,na.rm=TRUE),
-            CO2trate.mean=mean(CO2trate.mean,na.rm=TRUE),
-            meanCH4.funnel=mean(meanCH4.funnel,na.rm=TRUE),
-            CH4drate.mean=mean(CH4drate.mean,na.rm=TRUE),
-            CH4erate.mean=mean(CH4erate.mean,na.rm=TRUE),
+  summarise(
             Depth=mean(Depth,na.rm=TRUE), 
             SurfacepH=mean(pH,na.rm=TRUE),
             BottomDO=mean(BottomDO,na.rm=TRUE),
@@ -346,3 +344,66 @@ summary_table<-master %>%
             Total.N=mean(Total.N.mg.L,na.rm=TRUE),
             SO4=mean(SO4,na.rm=TRUE),
             BottomTurb=mean(BottomTurb,na.rm=TRUE))
+
+#need to make a separate table for this b/c not all sites had seabird/chemical data associated with them
+summary_rates<-diffusive %>%
+  mutate(region=ifelse(site %in% Littoral_Tributary,"tributary","main"))%>%
+  group_by(region)%>%
+  summarise(CH4trate.mean=mean(CH4trate.mean,na.rm=TRUE),
+            CO2trate.mean=mean(CO2trate.mean,na.rm=TRUE),
+            meanCH4.funnel=mean(meanCH4.funnel,na.rm=TRUE),
+            CH4drate.mean=mean(CH4drate.mean,na.rm=TRUE),
+            CH4erate.mean=mean(CH4erate.mean,na.rm=TRUE))
+
+summary_rate_error<- diffusive %>%
+  mutate(region=ifelse(site %in% Littoral_Tributary,"tributary","main"))%>%
+  mutate(CH4trate.log=log(CH4trate.mean))%>%
+  mutate(CH4drate.log=log(CH4drate.mean))%>%
+  mutate(CH4erate.log=log(CH4erate.mean+1))%>%
+  mutate(meanCH4.funnel.log=log(meanCH4.funnel+1))%>%
+  group_by(region)%>%
+  summarise(CH4trate.sd=sd(CH4trate.log,na.rm=TRUE),
+            CH4trate.na=(sum(is.na(CH4trate.log))),
+            CH4trate.log=log(mean(CH4trate.mean,na.rm=TRUE)),
+            
+            meanCH4.funnel.sd=sd(meanCH4.funnel.log,na.rm=TRUE),
+            meanCH4.funnel.na=(sum(is.na(meanCH4.funnel.log))),
+            meanCH4.funnel.log=log(mean(meanCH4.funnel,na.rm=TRUE)),
+            
+            CH4drate.sd=sd(CH4drate.log,na.rm=TRUE),
+            CH4drate.na=(sum(is.na(CH4drate.log))),
+            CH4drate.log=log(mean(CH4drate.mean,na.rm=TRUE)),
+            
+            CH4erate.sd=sd(CH4erate.log,na.rm=TRUE),
+            CH4erate.na=(sum(is.na(CH4erate.log))),
+            CH4erate.log=log(mean(CH4erate.mean,na.rm=TRUE)))
+
+Error_tributary<-summary_rate_error %>%
+  filter(region=="tributary")%>%
+  mutate(CH4trate.se=CH4trate.sd/sqrt(8-CH4trate.na))%>%
+  mutate(CH4trate.upper=exp(CH4trate.se+CH4trate.log))%>%
+  mutate(CH4trate.lower=exp(CH4trate.log-CH4trate.se))%>%
+  mutate(meanCH4.funnel.se=meanCH4.funnel.sd/sqrt(8-meanCH4.funnel.na))%>%
+  mutate(meanCH4.funnel.upper=exp(meanCH4.funnel.log+meanCH4.funnel.se))%>%
+  mutate(meanCH4.funnel.lower=exp(meanCH4.funnel.log-meanCH4.funnel.se))%>%
+  mutate(CH4drate.se=CH4drate.sd/sqrt(8-CH4drate.na))%>%
+  mutate(CH4drate.upper=exp(CH4drate.log+CH4drate.se))%>%
+  mutate(CH4drate.lower=exp(CH4drate.log-CH4drate.se))%>%
+  mutate(CH4erate.se=CH4erate.sd/sqrt(8-CH4erate.na))%>%
+  mutate(CH4erate.upper=exp(CH4erate.log+CH4erate.se))%>%
+  mutate(CH4erate.lower=exp(CH4erate.log-CH4erate.se))
+
+Error_main<-summary_rate_error %>%
+  filter(region=="main")%>%
+  mutate(CH4trate.se=CH4trate.sd/sqrt(22-CH4trate.na))%>%
+  mutate(CH4trate.upper=exp(CH4trate.se+CH4trate.log))%>%
+  mutate(CH4trate.lower=exp(CH4trate.log-CH4trate.se))%>%
+  mutate(meanCH4.funnel.se=meanCH4.funnel.sd/sqrt(22-meanCH4.funnel.na))%>%
+  mutate(meanCH4.funnel.upper=exp(meanCH4.funnel.log+meanCH4.funnel.se))%>%
+  mutate(meanCH4.funnel.lower=exp(meanCH4.funnel.log-meanCH4.funnel.se))%>%
+  mutate(CH4drate.se=CH4drate.sd/sqrt(22-CH4drate.na))%>%
+  mutate(CH4drate.upper=exp(CH4drate.log+CH4drate.se))%>%
+  mutate(CH4drate.lower=exp(CH4drate.log-CH4drate.se))%>%
+  mutate(CH4erate.se=CH4erate.sd/sqrt(22-CH4erate.na))%>%
+  mutate(CH4erate.upper=exp(CH4erate.log+CH4erate.se))%>%
+  mutate(CH4erate.lower=exp(CH4erate.log-CH4erate.se))
