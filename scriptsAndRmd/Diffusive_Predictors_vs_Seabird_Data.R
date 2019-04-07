@@ -31,7 +31,7 @@ depthmax_seabird <- seabird %>%
 #call the diffusive flux data that Sarah put toether
 #just changed this to pull in the output file, but if you want to compare with what we were looking at previously
 #you can change it back to the diffusive fluxes in the input folder
-diffusive<-read.csv(paste(myWD, "output/lakePowellFluxes.csv", sep="/")) 
+diffusive<-read.csv(paste(myWD, "output/lakePowellFluxes20190322.csv", sep="/")) 
 head(diffusive)
 
 #join diffusive fluxes with surface seabird data
@@ -227,11 +227,10 @@ seabirdsurfaceformaster<-seabirdsurface %>%
   select(Station.ID,Chl,T,pH)
 colnames(seabirdsurfaceformaster)<-c("Station.ID","SurfaceChl","SurfaceTemp","SurfacepH")
 
-master<-left_join(lakePowellDataSubset,chemsum,by="Station.ID")
+master<-left_join(surface_seabird_diffusive,chemsum,by="Station.ID")
 master<-left_join(master,depths,by="Station.ID")
 master<-left_join(master, chlamax,by="Station.ID")
 master<-left_join(master, seabirdbottom, by="Station.ID")
-master<-left_join(master, seabirdsurfaceformaster,by="Station.ID")
 master<-left_join(master, chemsurface,by="Station.ID")
 
 
@@ -245,40 +244,51 @@ write.table(master,
 library(glmm)
 
 
+
 #pull out subset of master list that has chemistry and seabird data
 mastersub<- master %>%
-  filter(!is.na(Ca))
-  #filter(!is.na(chlamax))
+  filter(!is.na(Ca)) %>%
+  mutate(sqrtCH4=1/sqrt(CH4.trate.best))
+
+  
+
+## test for normality
+
+shapiro.test(mastersub$sqrtCH4)
+shapiro.test(mastersub$CO2.trate.best)
+
+
 
 #Single Predictors of CH4
-summary(glm(mastersub$CH4.trate.best~mastersub$SurfaceChl)) #78
-summary(glm(mastersub$CH4.trate.best~mastersub$Depth.y)) #77
-summary(glm(mastersub$CH4.trate.best~mastersub$Total.P..mg.L)) #56
-summary(glm(mastersub$CH4.trate.best~mastersub$SO4)) #77
-summary(glm(mastersub$CH4.trate.best~mastersub$BottomTemp)) #74
-summary(glm(mastersub$CH4.trate.best~mastersub$BottomCond)) #79
-summary(glm(mastersub$CH4.trate.best~mastersub$BottomTurb)) #75
-summary(glm(mastersub$CH4.trate.best~mastersub$Total.N.mg.L)) #75
+summary(glm(mastersub$sqrtCH4~mastersub$SurfaceChl)) #45
+summary(glm(mastersub$sqrtCH4~mastersub$Depth.y)) #35
+summary(glm(mastersub$sqrtCH4~mastersub$Total.P..mg.L)) #46
+summary(glm(mastersub$sqrtCH4~mastersub$SO4)) #57
+summary(glm(mastersub$sqrtCH4~mastersub$BottomTemp)) #37
+summary(glm(mastersub$sqrtCH4~mastersub$BottomCond)) #44
+summary(glm(mastersub$sqrtCH4~mastersub$BottomTurb)) #35
+summary(glm(mastersub$sqrtCH4~mastersub$Total.N.mg.L)) #50
 
 ## So let's say our best model is TP, now we try adding variables
-summary(glm(mastersub$CH4.trate.best~mastersub$Total.P..mg.L+mastersub$SurfaceChl)) #53
-summary(glm(mastersub$CH4.trate.best~mastersub$Total.P..mg.L+mastersub$BottomTemp)) #53
-summary(glm(mastersub$CH4.trate.best~mastersub$Total.P..mg.L+mastersub$Depth.y)) #48.8
-summary(glm(mastersub$CH4.trate.best~mastersub$Total.P..mg.L+mastersub$BottomCond)) #38.1
-summary(glm(mastersub$CH4.trate.best~mastersub$Total.P..mg.L+mastersub$BottomTurb)) #46.4
-summary(glm(mastersub$CH4.trate.best~mastersub$Total.P..mg.L+mastersub$Total.N.mg.L)) #56
+summary(glm(mastersub$sqrtCH4~mastersub$Total.P..mg.L+mastersub$SurfaceChl)) #40
+summary(glm(mastersub$sqrtCH4~mastersub$Total.P..mg.L+mastersub$BottomTemp)) #39
+summary(glm(mastersub$sqrtCH4~mastersub$Total.P..mg.L+mastersub$Depth.y)) #34
+summary(glm(mastersub$sqrtCH4~mastersub$Total.P..mg.L+mastersub$BottomCond)) #38
+summary(glm(mastersub$sqrtCH4~mastersub$Total.P..mg.L+mastersub$BottomTurb)) #36.6
+summary(glm(mastersub$sqrtCH4~mastersub$Total.P..mg.L+mastersub$Total.N.mg.L)) #47
 # Total Nitrogen is uninformative
 
 #Interactions
 
-summary(glm(mastersub$CH4.trate.best~mastersub$BottomTemp*mastersub$Total.P..mg.L)) #5.6
-summary(glm(mastersub$CH4.trate.best~mastersub$BottomTemp*mastersub$BottomTurb)) #77.6
-summary(glm(mastersub$CH4.trate.best~mastersub$BottomTemp*mastersub$BottomCond)) #56.5
-summary(glm(mastersub$CH4.trate.best~mastersub$BottomTemp*mastersub$Depth.y)) #72
-summary(glm(mastersub$CH4.trate.best~mastersub$BottomCond*mastersub$Total.P..mg.L)) #39
-summary(glm(mastersub$CH4.trate.best~mastersub$BottomCond*mastersub$BottomTemp)) #56
+summary(glm(mastersub$sqrtCH4~mastersub$BottomTemp*mastersub$Total.P..mg.L)) #39
+summary(glm(mastersub$sqrtCH4~mastersub$BottomTemp*mastersub$BottomTurb)) #36.7
+summary(glm(mastersub$sqrtCH4~mastersub$BottomTemp*mastersub$BottomCond)) #36
+summary(glm(mastersub$sqrtCH4~mastersub$BottomTemp*mastersub$Depth.y)) #34
+summary(glm(mastersub$sqrtCH4~mastersub$BottomCond*mastersub$Total.P..mg.L)) #39.5
+summary(glm(mastersub$sqrtCH4~mastersub$BottomCond*mastersub$BottomTemp)) #36
+summary(glm(mastersub$sqrtCH4~mastersub$Depth.y*mastersub$Total.P..mg.L)) #35
 
-#BEST CH4 MODEL IS Interactive WITH Bottom Temperature and TP as predictors
+#BEST CH4 MODEL additive with Depth and TP as predictors
 
 
 #Single Predictors of CO2
@@ -310,3 +320,29 @@ summary(glm(mastersub$CO2.trate.best~mastersub$SurfacepH*mastersub$HCO3)) #98.9
 
 #BEST CO2 MODEL IS ADDITIVE WITH pH and bicarbonate concentration as predictors
 
+# Now get master table organized to summarize the two main regions used for upscaling
+
+Littoral_Tributary<-c("Alcove","Colorado Inlet","Sheep Canyon","Escalante Inflow","Hite","Camp 3","Camp 4","Garces Island","SJR Inlet")
+
+master$region<-ifelse(master$site.x %in% Littoral_Tributary,"tributary","main")
+
+summary_table<-master %>%
+  group_by(region)%>%
+  summarise(CH4trate.mean=mean(CH4trate.mean,na.rm=TRUE),
+            CO2trate.mean=mean(CO2trate.mean,na.rm=TRUE),
+            meanCH4.funnel=mean(meanCH4.funnel,na.rm=TRUE),
+            CH4drate.mean=mean(CH4drate.mean,na.rm=TRUE),
+            CH4erate.mean=mean(CH4erate.mean,na.rm=TRUE),
+            Depth=mean(Depth,na.rm=TRUE), 
+            SurfacepH=mean(pH,na.rm=TRUE),
+            BottomDO=mean(BottomDO,na.rm=TRUE),
+            BottomTemp=mean(BottomTemp,na.rm=TRUE),
+            Total.P=mean(Total.P..mg.L,na.rm=TRUE),
+            BottomCond=mean(BottomCond,na.rm=TRUE),
+            SurfaceChl=mean(Chl,na.rm=TRUE),
+            SurfaceHCO3=mean(SurfaceHCO3,na.rm=TRUE),
+            SurfaceCa=mean(SurfaceCa,na.rm=TRUE),
+            SurfaceTemp=mean(T,na.rm=TRUE),
+            Total.N=mean(Total.N.mg.L,na.rm=TRUE),
+            SO4=mean(SO4,na.rm=TRUE),
+            BottomTurb=mean(BottomTurb,na.rm=TRUE))
