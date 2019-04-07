@@ -481,11 +481,11 @@ lakePowellMeans<-merge(lakePowellChamberMeans, lakePowellFunnelmeans,
 #unique(lakePowellData10test$site)
 
 #rename so naming makes more sense in the melted dataframe
-lakePowellData10<-mutate(lakePowellData10,
-                         CH4.chamber.eb=ch4.erate,
-                         CH4.funnel.eb=CH4.funnel.flux,
-                         CO2.chamber.eb=co2.erate,
-                         CO2.funnel.eb=CO2.funnel.flux)
+# lakePowellData10<-mutate(lakePowellData10,
+#                          CH4.chamber.eb=ch4.erate,
+#                          CH4.funnel.eb=CH4.funnel.flux,
+#                          CO2.chamber.eb=co2.erate,
+#                          CO2.funnel.eb=CO2.funnel.flux)
 #####9/7/2018 -- we don't want to do this SW----
 # #want to melt/cast this so I have one column of ebullitive emissions, one column
 # #assigning whether it was a chamber or funnel measurement
@@ -578,10 +578,10 @@ write.table(lakePowellMeans,
             row.names=FALSE)
 
 
-write.table(lakePowellDataSubset, 
-            file=paste(myWD, "output/lakePowellFluxes20190322.csv", sep="/"),
-            sep=",",
-            row.names=FALSE)
+# write.table(lakePowellDataSubset, 
+#             file=paste(myWD, "output/lakePowellFluxes20190322.csv", sep="/"),
+#             sep=",",
+#             row.names=FALSE)
 
 
 
