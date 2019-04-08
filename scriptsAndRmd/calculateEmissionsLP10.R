@@ -378,18 +378,40 @@ plot(with(OUT[!is.na(OUT$ch4.drate.mg.h.best),], #R2
 plot(with(OUT[!is.na(OUT$ch4.drate.mg.h.best),], #fractional error
           ifelse(ch4.best.model == "linear", ch4.lm.slope.err, ch4.ex.slope.err))) 
           #2 with fractional error above 0.1
+
+
+
+
 #histogram of the methane diffusive emission rate in units of mg C m-2 d-1
 ggplot(OUT, aes(ch4.drate.mg.h.best*24*12/16))+ #mgC m-2 d-1
          geom_histogram(binwidth = 0.2)+
   xlim(0, 10)
 
+ggplot(OUT, aes(ch4.drate.mg.h.best*24*12/16, site))+
+  geom_point(alpha=0.4)+
+  geom_point(data=OUT, aes(ch4.trate.mg.h*24*12/16, site), alpha=0.4, color="red")+
+  xlim(-5, 50)
+
+ggplot(OUT, aes(co2.drate.mg.h.best*24*12/44, site))+
+  geom_point(alpha=0.4)+
+  geom_point(data=OUT, aes(co2.trate.mg.h*24*12/44, site), alpha=0.4, color="red")
+  xlim(-5, 50)
+
 
 # STEP 3: MERGE DIFFUSION RATES WITH eqAreaData
+#in some cases, trate<drate. This could be due to chamber-induced artifacts, and 
+#doesn't make physical sense, b/c trate = drate + erate
+####If trate<drate, trate = drate
 
 lakePowellData10<-mutate(lakePowellData10,
                          ch4.drate.mg.h = OUT$ch4.drate.mg.h.best,
                          co2.drate.mg.h = OUT$co2.drate.mg.h.best,
-                         ch4.trate.mg.h = OUT$ch4.trate.mg.h,
+                         ch4.trate.mg.h = ifelse(OUT$ch4.trate.mg.h>OUT$ch4.drate.mg.h.best,
+                                                 OUT$ch4.trate.mg.h, #value if trate is bigger
+                                                 OUT$ch4.drate.mg.h.best), #value if drate is bigger
+                         # co2.trate.mg.h = ifelse(abs(OUT$co2.trate.mg.h)>abs(OUT$co2.drate.mg.h.best),
+                         #                         OUT$co2.trate.mg.h,
+                         #                         OUT$co2.drate.mg.h.best),
                          co2.trate.mg.h = OUT$co2.trate.mg.h,
                          ch4.lm.slope.err = OUT$ch4.lm.slope.err,
                          ch4.ex.slope.err = OUT$ch4.ex.slope.err,

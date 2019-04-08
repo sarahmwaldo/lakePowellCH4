@@ -49,6 +49,9 @@ LP.openWater<-filter(lakePowellMeans, site!="Colorado Inlet",
                      site != "Camp 3", site != "Hite Canyon", site != "SJR Inlet",
                      site != "Alcove", site != "Escalante Inflow", site != "Garces Island")
 summary(LP.openWater)
+
+#LPtest<-filter(LP.openwater, LP.openWater$CH4.drate<LP.openWater$C)
+
 ggplot(LP.openWater, aes(log(CH4trate.mean)))+
   geom_histogram(bins=20)
 
@@ -73,14 +76,20 @@ totCH4.powell.kg.y<-sum(totCH4.lit.kg.y, totCH4.ow.kg.y)
 totCH4errL.powell.kg.y<-sqrt(sum(ErrCH4L.lit.kg.y^2, ErrCH4L.ow.kg.y^2))
 totCH4errU.powell.kg.y<-sqrt(sum(ErrCH4U.lit.kg.y^2, ErrCH4U.ow.kg.y^2))
 
-totFracErrL<-totCH4errL.powell.kg.y/totCH4.powell.kg.y*100 #as a percent, 42%
-totFracErrU<-totCH4errU.powell.kg.y/totCH4.powell.kg.y*100 #as a percent, 79%
+totFracErrL<-totCH4errL.powell.kg.y/totCH4.powell.kg.y*100 #as a percent, 41%
+totFracErrU<-totCH4errU.powell.kg.y/totCH4.powell.kg.y*100 #as a percent, 75%
 
 totCH4.powell.g.m2.y<-totCH4.powell.kg.y/(467*10^6)*1000 #units: g CH4 m-2 y-1
 powell.areal.ch4.co2e<-totCH4.powell.g.m2.y*34 #converting from gCH4 to CO2e, for units of g CO2e m-2 y-1
-powell.areal.ch4.co2e #239.5
+powell.areal.ch4.co2e #249.4
 powell.areal.ch4.co2e.L<-powell.areal.ch4.co2e-(powell.areal.ch4.co2e*totFracErrL/100) #lower range: 137.6
 powell.areal.ch4.co2e.U<-powell.areal.ch4.co2e+(powell.areal.ch4.co2e*totFracErrU/100) #upper range: 429.75
+
+paste("Areal CH4 Emission Rate (g CO2e m-2 y-1) = ", 
+      round(powell.areal.ch4.co2e, 2), 
+      " [", round(powell.areal.ch4.co2e.L,2), "-", 
+      round(powell.areal.ch4.co2e.U,2),"]", 
+      sep="")
 
 ###############CO2##################################
 
@@ -96,14 +105,18 @@ LP.CO2.summary<-lakePowellMeans%>%
 
 powell.areal.CO2.g.m2.y<-LP.CO2.summary$meanCO2*24*365/1000
 powell.areal.CO2.g.m2.y #85.45 g CO2-e m-2 y-1
-powell.areal.CO2err.g.m2.y<-totCO2.g.m2.y*LP.CO2.summary$fracErrCO2/100
+powell.areal.CO2err.g.m2.y<-powell.areal.CO2.g.m2.y*LP.CO2.summary$fracErrCO2/100
 powell.areal.CO2err.g.m2.y #+/- 47.8
 powell.areal.CO2.L<-powell.areal.CO2.g.m2.y-powell.areal.CO2err.g.m2.y #37.6
 powell.areal.CO2.U<-powell.areal.CO2.g.m2.y+powell.areal.CO2err.g.m2.y #133.2
 
+paste("Areal CO2 Emission Rate (g CO2e m-2 y-1) = ", 
+      round(powell.areal.CO2.g.m2.y, 2), 
+      " [", round(powell.areal.CO2.L,2), "-", 
+      round(powell.areal.CO2.U,2),"]", 
+      sep="")
 
-
-totalArealEmissions<-sum(totCO2.g.m2.y, powell.areal.ch4.co2e)
+totalArealEmissions<-sum(powell.areal.CO2.g.m2.y, powell.areal.ch4.co2e)
 totalArealEmissions #324.95
 totArealErrorL<-sqrt(sum((powell.areal.ch4.co2e*totFracErrL/100)^2, powell.areal.CO2err.g.m2.y^2))
 totFracErrL<-totArealErrorL/totalArealEmissions*100 #34%
@@ -121,10 +134,13 @@ areaPowell<-467 #km2
 area_elec<-areaPowell*10^6/hydroPower #m2 y per MWh
 
 powell.ef.ch4.co2e<-powell.areal.ch4.co2e*area_elec/1000 #kg CO2-e MWh-1
-powell.ef.ch4.co2e #21.52
+powell.ef.ch4.co2e #22.4
 powell.ef.ch4.co2eL<-powell.ef.ch4.co2e-(powell.ef.ch4.co2e*totFracErrL/100)
 powell.ef.ch4.co2eU<-powell.ef.ch4.co2e+(powell.ef.ch4.co2e*totFracErrU/100)
-
+paste("CH4 EF (kg CO2e MWh-1) ", 
+      round(powell.ef.ch4.co2e,2), " [",
+      round(powell.ef.ch4.co2eL,2), "-",
+      round(powell.ef.ch4.co2eU,2), "]", sep="")
 
 powell.ef.co2.co2e<-powell.areal.CO2.g.m2.y*area_elec/1000
 powell.ef.co2.co2e #7.68
@@ -133,10 +149,20 @@ powell.ef.err.co2.co2e
 powell.ef.co2.co2e.L<-powell.ef.co2.co2e-powell.ef.err.co2.co2e
 powell.ef.co2.co2e.U<-powell.ef.co2.co2e+powell.ef.err.co2.co2e
 
+paste("CO2 EF (kg CO2e MWh-1) ", 
+      round(powell.ef.co2.co2e,2), " [",
+      round(powell.ef.co2.co2e.L,2), "-",
+      round(powell.ef.co2.co2e.U,2), "]", sep="")
+
 totEF.emissions<-sum(powell.ef.ch4.co2e, powell.ef.co2.co2e)
 totEF.emissions #29.2
 totEF.errL<-totEF.emissions-sqrt(sum((powell.ef.ch4.co2e*totFracErrL/100)^2, powell.ef.err.co2.co2e^2))
 totEF.errU<-totEF.emissions+sqrt(sum((powell.ef.ch4.co2e*totFracErrU/100)^2, powell.ef.err.co2.co2e^2))
+
+paste("Total EF (kg CO2e MWh-1) ", 
+      round(totEF.emissions,2), " [",
+      round(totEF.errL,2), "-",
+      round(totEF.errU,2), "]", sep="")
 
 # filter(lakePowellData10, site=="Colorado Inlet" | site == "Sheep Canyon" | site == "Camp 3" | site == "Hite Canyon"| site == "SJR Inlet"|site == "Alcove" | site == "Escalante Inflow" | site == "Garces Island") %>%
 #   summarize(mean.ch4 = mean(ch4.drate.mg.h, na.rm=TRUE),
