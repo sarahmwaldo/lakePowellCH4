@@ -10,7 +10,7 @@
 
 #Bridget is testing GitHub
 lakePowellData10.orig<-lakePowellData10
-lakePowellData10<-filter(lakePowellData10.orig, site!="SJR Inlet End", #SJR inlet end was recorded for the lat/long, but isn't a separate observation
+lakePowellData10<-dplyr::filter(lakePowellData10.orig, site!="SJR Inlet End", #SJR inlet end was recorded for the lat/long, but isn't a separate observation
                              rep!=4) #Camp 3, rep 4 is the measurement taken in the morning after the chamber was left on the water all night. 
                                      #There is a negative methane regression, indicating uptake, but this is an artifact. This is the only rep=4 in the dataset. 
 
@@ -594,11 +594,14 @@ lakePowellMeans$site<-translationKey[match(lakePowellMeans$Station.ID, translati
 #          CO2eq.funnel.eb=sum(CH4.funnel.eb.equiv,CO2.funnel.eb))
 
 #Now make a vector that just has the depth for each site added into the lakePowellData1
+# write.table(lakePowellMeans, 
+#             file=paste(myWD, "output/lakePowellFluxes20190322.csv", sep="/"),
+#             sep=",",
+#             row.names=FALSE)
 write.table(lakePowellMeans, 
-            file=paste(myWD, "output/lakePowellFluxes20190322.csv", sep="/"),
+            file=paste(myWD, "output/lakePowellFluxes20190502.csv", sep="/"),
             sep=",",
             row.names=FALSE)
-
 
 # write.table(lakePowellDataSubset, 
 #             file=paste(myWD, "output/lakePowellFluxes20190322.csv", sep="/"),
