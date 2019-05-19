@@ -43,8 +43,14 @@ upscaling$percent_littoral<-upscaling$trib_lit_SA_km2/upscaling$totalSA_km2*100
 upscaling_plot<-upscaling %>%
   ggplot(aes(x=elevations_m,y=kgCO2eMWh))+
   geom_point()+
-  theme_bw()
+  theme_bw()+
+  theme(panel.grid.major=element_blank(),panel.grid.minor=element_blank())+
+  ylab(expression("Maximum Capacity kg CO"[2]*"-eq MWh"^"-1"*""))+
+  xlab(expression("Lake Powell Elevation (m)"))
 upscaling_plot
+
+ggsave("output/upscaling_sceenarios_plot.tiff",upscaling_plot,height=3.25,width=3.25,units='in',dpi=600,compression="lzw")
+
 
 ## need to add a point for the actual July data points
 
